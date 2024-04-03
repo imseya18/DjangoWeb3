@@ -1,9 +1,13 @@
+import traceback
+
+import web3.exceptions
 from web3 import Web3
+#from .StoreInDB import *
 
 
 class StoreScore:
-    def __init__(self, infural_url, contract_address, abi, eth_address, private_key):
-        self.web3 = Web3(Web3.HTTPProvider(infural_url))
+    def __init__(self, infura_url, contract_address, abi, eth_address, private_key):
+        self.web3 = Web3(Web3.HTTPProvider(infura_url))
         self.contract = self.web3.eth.contract(address=contract_address, abi=abi)
         self.eth_address = eth_address
         self.private_key = private_key
@@ -37,9 +41,12 @@ class StoreScore:
     def add_match(self, match_id, tournament_id, player1_score, player2_score, player1_name, player2_name, winner):
         try:
             nonce = self.web3.eth.get_transaction_count(self.eth_address)
-            transaction = self.contract.functions.addMatch(match_id, tournament_id, player1_score, player2_score, player1_name, player2_name, winner).build_transaction({
+            gas_estimate = self.contract.functions.addMatch(match_id, tournament_id, player1_score, player2_score, player1_name,
+                                                            player2_name, winner).estimate_gas({'from': self.eth_address})
+            transaction = self.contract.functions.addMatch(match_id, tournament_id, player1_score, player2_score,
+                                                           player1_name, player2_name, winner).build_transaction({
                 'chainId': self.web3.eth.chain_id,
-                'gas': 1123064,
+                'gas': gas_estimate,
                 'gasPrice': self.web3.eth.gas_price,
                 'nonce': nonce,
             })
@@ -48,8 +55,14 @@ class StoreScore:
             txn_receipt = self.web3.eth.wait_for_transaction_receipt(txn_hash)
             return txn_receipt
         except Exception as e:
-            print(e)
-            return None
-
+            if "gas" in str(e).lower():
+                print(e)
+                print("erreur de gas je stock dans la DB")
+                #add_match_to_db(match_id, player1_score, player2_score, player1_name, player2_name, winner)
+            elif "reverted" in str(e).lower():
+                print("transaction revert:")
+                print(e)
+            else:
+                print(e)
 
 

@@ -5,7 +5,7 @@ from .ConnectionToBC import StoreScore
 
 class Web3Config(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
-    name = 'web3'
+    name = 'TestConnection'
 
     def ready(self):
         super().ready()
