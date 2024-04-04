@@ -13,8 +13,8 @@ def add_tournament_to_db(match_id, tournament_id, player1_score, player2_score, 
 
 
 def delete_tournament_from_db(tournament_id):
-    if Match.objects.filter(tournament_id=tournament_id).exists():
-        tournament = tournament_id.objects.get(tournament_id=tournament_id)
+    if Tournament.objects.filter(tournament_id=tournament_id).exists():
+        tournament = Tournament.objects.get(tournament_id=tournament_id)
         tournament.delete()
         print(f"tournament {tournament_id} supprimer de la db")
     else:

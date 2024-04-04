@@ -1,7 +1,10 @@
-from django.shortcuts import render
 from django.conf import settings
+from django.shortcuts import render
+from .StoreInDB import delete_match_from_db, delete_tournament_from_db
 from .models import Match, Tournament
-from .StoreInDB import delete_match_from_db
+
+
+
 #def main(request):
 #    storescore = settings.STORE_SCORE
 #    print(storescore.get_balance())
@@ -35,4 +38,18 @@ def match_get(request):
     storescore = settings.STORE_SCORE
     match = storescore.get_match_by_id(17)
     print(match)
+    return render(request, "main.html")
+
+
+def tournament_add(request):
+    storescore = settings.STORE_SCORE
+    if Tournament.objects.exists():
+        print(f" il y a {Tournament.objects.count()} match dans la db")
+        for Tournament in Tournament.objects.all():
+            tnx = storescore.add_tournament(Tournament.match_id, Tournament.tournament_id, Tournament.player1_score, Tournament.player2_score, Tournament.player1_id,
+                                 Tournament.player2_id, Tournament.winner_id)
+            if tnx is not None:
+                print("la TX est reussi je delete")
+                delete_tournament_from_db(Tournament.match_id)
+    storescore.add_tournament(17, 0, 1, 2, "jeremy", "johnny", "johnny")
     return render(request, "main.html")

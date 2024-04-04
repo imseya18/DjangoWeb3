@@ -26,6 +26,14 @@ class StoreScore:
             print(e)
             return None
 
+    def get_tournament_by_id(self, tournament_id):
+        try:
+            tournament = self.contract.functions.getTournament(tournament_id).call()
+            return tournament
+        except Exception as e:
+            print(e)
+            return None
+
     @staticmethod
     def get_transaction_cost(balance_before, balance_after):
         return balance_before - balance_after
@@ -63,14 +71,13 @@ class StoreScore:
             else:
                 print(e)
 
-
     def add_tournament(self, match_id, tournament_id, player1_score, player2_score, player1_name, player2_name, winner):
-        from .StoreInDB import add_match_to_db, delete_match_from_db
+        from .StoreInDB import add_tournament_to_db, delete_tournament_from_db
         try:
             nonce = self.web3.eth.get_transaction_count(self.eth_address)
-            gas_estimate = self.contract.functions.addMatch(match_id, tournament_id, player1_score, player2_score, player1_name,
+            gas_estimate = self.contract.functions.addTournament(match_id, tournament_id, player1_score, player2_score, player1_name,
                                                             player2_name, winner).estimate_gas({'from': self.eth_address})
-            transaction = self.contract.functions.addMatch(match_id, tournament_id, player1_score, player2_score,
+            transaction = self.contract.functions.addTournament(match_id, tournament_id, player1_score, player2_score,
                                                            player1_name, player2_name, winner).build_transaction({
                 'chainId': self.web3.eth.chain_id,
                 'gas': gas_estimate,
@@ -85,10 +92,10 @@ class StoreScore:
             if "gas" in str(e).lower():
                 print(e)
                 print("erreur de gas")
-                add_match_to_db(match_id, player1_score, player2_score, player1_name, player2_name, winner)
+                add_tournament_to_db(match_id, tournament_id, player1_score, player2_score, player1_name, player2_name, winner)
             elif "reverted" in str(e).lower():
                 print("transaction revert:")
                 print(e)
-                delete_match_from_db(match_id)
+                delete_tournament_from_db(tournament_id)
             else:
                 print(e)
