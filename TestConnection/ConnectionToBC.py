@@ -1,8 +1,4 @@
-import traceback
-
-import web3.exceptions
 from web3 import Web3
-#from .StoreInDB import *
 
 
 class StoreScore:
@@ -39,6 +35,7 @@ class StoreScore:
         return (balance_before - balance_after) * 3500
 
     def add_match(self, match_id, tournament_id, player1_score, player2_score, player1_name, player2_name, winner):
+        from .StoreInDB import add_match_to_db, delete_match_from_db
         try:
             nonce = self.web3.eth.get_transaction_count(self.eth_address)
             gas_estimate = self.contract.functions.addMatch(match_id, tournament_id, player1_score, player2_score, player1_name,
@@ -57,12 +54,41 @@ class StoreScore:
         except Exception as e:
             if "gas" in str(e).lower():
                 print(e)
-                print("erreur de gas je stock dans la DB")
-                #add_match_to_db(match_id, player1_score, player2_score, player1_name, player2_name, winner)
+                print("erreur de gas")
+                add_match_to_db(match_id, player1_score, player2_score, player1_name, player2_name, winner)
             elif "reverted" in str(e).lower():
                 print("transaction revert:")
                 print(e)
+                delete_match_from_db(match_id)
             else:
                 print(e)
 
 
+    def add_tournament(self, match_id, tournament_id, player1_score, player2_score, player1_name, player2_name, winner):
+        from .StoreInDB import add_match_to_db, delete_match_from_db
+        try:
+            nonce = self.web3.eth.get_transaction_count(self.eth_address)
+            gas_estimate = self.contract.functions.addMatch(match_id, tournament_id, player1_score, player2_score, player1_name,
+                                                            player2_name, winner).estimate_gas({'from': self.eth_address})
+            transaction = self.contract.functions.addMatch(match_id, tournament_id, player1_score, player2_score,
+                                                           player1_name, player2_name, winner).build_transaction({
+                'chainId': self.web3.eth.chain_id,
+                'gas': gas_estimate,
+                'gasPrice': self.web3.eth.gas_price,
+                'nonce': nonce,
+            })
+            signed_tx = self.web3.eth.account.sign_transaction(transaction, self.private_key)
+            txn_hash = self.web3.eth.send_raw_transaction(signed_tx.rawTransaction)
+            txn_receipt = self.web3.eth.wait_for_transaction_receipt(txn_hash)
+            return txn_receipt
+        except Exception as e:
+            if "gas" in str(e).lower():
+                print(e)
+                print("erreur de gas")
+                add_match_to_db(match_id, player1_score, player2_score, player1_name, player2_name, winner)
+            elif "reverted" in str(e).lower():
+                print("transaction revert:")
+                print(e)
+                delete_match_from_db(match_id)
+            else:
+                print(e)

@@ -11,3 +11,4 @@ class Web3Config(AppConfig):
         super().ready()
         if not hasattr(settings, 'STORE_SCORE'):
             settings.STORE_SCORE = StoreScore(settings.INFURA_URL, settings.CONTRACT_ADDRESS, settings.ABI, settings.ETH_ADDRESS, settings.META_PK)
+#

@@ -21,5 +21,6 @@ from TestConnection import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', views.main),
+    path('add/', views.match_add),
+    path('get/', views.match_get),
 ]
