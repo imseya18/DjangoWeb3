@@ -98,4 +98,5 @@ class StoreScore:
                 print(e)
                 delete_tournament_from_db(tournament_id)
             else:
+                print("Wrong address")
                 print(e)

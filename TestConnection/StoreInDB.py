@@ -1,5 +1,5 @@
 from .models import Match, Tournament
-
+import json
 
 def add_tournament_to_db(match_id, tournament_id, player1_score, player2_score, player1_id, player2_id, winner_id):
     if not Tournament.objects.filter(tournament_id=tournament_id):
@@ -38,3 +38,30 @@ def delete_match_from_db(match_id):
         print(f"match {match_id} supprimer de la db")
     else:
         print(f"match {match_id} n'est pas dans la db, pas de suppression")
+
+
+def convert_tournament_to_json(raw_tournament):
+    tournament = []
+    for match in raw_tournament:
+        dictionnaire = {
+            "match_id": match[0],
+            "player1_score": match[1],
+            "player2_score": match[2],
+            "player1_id": match[3],
+            "player2_id": match[4],
+            "winner_id": match[5],
+        }
+        tournament.append(dictionnaire)
+    return json.dumps(tournament, indent=4)
+
+
+def convert_match_to_json(raw_match):
+    match = {
+            "match_id": raw_match[0],
+            "player1_score": raw_match[1],
+            "player2_score": raw_match[2],
+            "player1_id": raw_match[3],
+            "player2_id": raw_match[4],
+            "winner_id": raw_match[5],
+        }
+    return json.dumps(match, indent=4)

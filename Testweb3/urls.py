@@ -24,4 +24,5 @@ urlpatterns = [
     path('match_add/', views.match_add),
     path('match_get/', views.match_get),
     path('tournament_add/', views.tournament_add),
+    path('tournament_get/', views.tournament_get),
 ]
