@@ -1,4 +1,4 @@
-from TestConnection.models import Match, Tournament
+from .models import Match, Tournament
 
 
 def add_tournament_to_db(match_id, tournament_id, player1_score, player2_score, player1_id, player2_id, winner_id):
