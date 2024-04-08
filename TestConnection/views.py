@@ -45,11 +45,11 @@ def tournament_add(request):
     storescore = settings.STORE_SCORE
     if Tournament.objects.exists():
         print(f" il y a {Tournament.objects.count()} match dans la db")
-        for Tournament in Tournament.objects.all():
-            tnx = storescore.add_tournament(Tournament.match_id, Tournament.tournament_id, Tournament.player1_score, Tournament.player2_score, Tournament.player1_id,
-                                 Tournament.player2_id, Tournament.winner_id)
+        for tournament in Tournament.objects.all():
+            tnx = storescore.add_tournament(tournament.match_id, tournament.tournament_id, tournament.player1_score, tournament.player2_score, tournament.player1_id,
+                                 tournament.player2_id, tournament.winner_id)
             if tnx is not None:
                 print("la TX est reussi je delete")
-                delete_tournament_from_db(Tournament.match_id)
+                delete_tournament_from_db(tournament.match_id)
     storescore.add_tournament(17, 0, 1, 2, "jeremy", "johnny", "johnny")
     return render(request, "main.html")
