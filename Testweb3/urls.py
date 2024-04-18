@@ -22,7 +22,9 @@ from TestConnection import views
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('match_add/', views.match_add),
-    path('match_get/', views.match_get),
+    #path('match_get/', views.match_get),
+    path('match/get/<int:match_id>/', views.match_get_api),
+    path('tournament/get/<int:tournament_id>/', views.tournament_get_api),
     path('tournament_add/', views.tournament_add),
-    path('tournament_get/', views.tournament_get),
+    #path('tournament_get/', views.tournament_get),
 ]
