@@ -21,10 +21,11 @@ from TestConnection import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('match_add/', views.match_add),
+    #path('match_add/', views.match_add),
     #path('match_get/', views.match_get),
     path('match/get/<int:match_id>/', views.match_get_api),
+    path('match/post/', views.match_post_api),
     path('tournament/get/<int:tournament_id>/', views.tournament_get_api),
-    path('tournament_add/', views.tournament_add),
+    path('tournament/post/', views.tournament_post_api),
     #path('tournament_get/', views.tournament_get),
 ]
