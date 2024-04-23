@@ -1,4 +1,5 @@
 from .models import Match, Tournament
+from .serializers import Matchserializer, Tournament_group_data
 import json
 
 def add_tournament_to_db(match_id, tournament_id, player1_score, player2_score, player1_id, player2_id, winner_id):
@@ -39,6 +40,28 @@ def delete_match_from_db(match_id):
     else:
         print(f"match {match_id} n'est pas dans la db, pas de suppression")
 
+
+def tournament_routine_db(storescore):
+    if Tournament.objects.exists():
+        print(f" il y a {Tournament.objects.count()} match dans la db")
+        for tournament in Tournament.objects.all():
+            tnx = storescore.add_tournament(tournament.match_id, tournament.tournament_id, tournament.player1_score,
+                                            tournament.player2_score, tournament.player1_id, tournament.player2_id,
+                                            tournament.winner_id)
+            if tnx is not None:
+                print("la TX est reussi je delete")
+                delete_tournament_from_db(tournament.tournament_id)
+
+def match_routine_db(storescore):
+    if Match.objects.exists():
+        print(f" il y a {Match.objects.count()} match dans la db")
+        for match in Match.objects.all():
+            tnx = storescore.add_match(match.match_id, 0, match.player1_score, match.player2_score,
+                                       match.player1_id,
+                                       match.player2_id, match.winner_id)
+            if tnx is not None:
+                print("la TX est reussi je delete")
+                delete_match_from_db(match.match_id)
 
 def convert_tournament_to_json(raw_tournament):
     tournament = []

@@ -76,9 +76,9 @@ class StoreScore:
         try:
             nonce = self.web3.eth.get_transaction_count(self.eth_address)
             gas_estimate = self.contract.functions.addTournament(match_id, tournament_id, player1_score, player2_score, player1_name,
-                                                            player2_name, winner).estimate_gas({'from': self.eth_address})
+                                                                 player2_name, winner).estimate_gas({'from': self.eth_address})
             transaction = self.contract.functions.addTournament(match_id, tournament_id, player1_score, player2_score,
-                                                           player1_name, player2_name, winner).build_transaction({
+                                                                player1_name, player2_name, winner).build_transaction({
                 'chainId': self.web3.eth.chain_id,
                 'gas': gas_estimate,
                 'gasPrice': self.web3.eth.gas_price,

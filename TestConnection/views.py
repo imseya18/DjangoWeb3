@@ -1,6 +1,6 @@
 from django.conf import settings
 from django.shortcuts import render
-from .StoreInDB import (delete_match_from_db, delete_tournament_from_db, convert_tournament_to_json,
+from .StoreInDB import (delete_match_from_db, tournament_routine_db, match_routine_db,delete_tournament_from_db, convert_tournament_to_json,
                         convert_match_to_json)
 from .models import Match, Tournament
 from rest_framework.views import APIView
@@ -28,7 +28,7 @@ def match_get_api(request,match_id):
             return Response(match_json.data)
     else:
         error_message = "No match found with id {0}".format(match_id)
-        return Response({"error": error_message}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({"error": error_message}, status=status.HTTP_404_NOT_FOUND)
 
 @api_view(['POST'])  #Verif token
 def match_post_api(request):
@@ -36,15 +36,7 @@ def match_post_api(request):
     match_data = Matchserializer(data=request.data)
     if match_data.is_valid():
         validated_data = match_data.validated_data
-        if Match.objects.exists():
-            print(f" il y a {Match.objects.count()} match dans la db")
-            for match in Match.objects.all():
-                tnx = storescore.add_match(match.match_id, 0, match.player1_score, match.player2_score,
-                                           match.player1_id,
-                                           match.player2_id, match.winner_id)
-                if tnx is not None:
-                    print("la TX est reussi je delete")
-                    delete_match_from_db(match.match_id)
+        match_routine_db(storescore)
         tnx = storescore.add_match(validated_data['match_id'],
                                    validated_data['tournament_id'],
                                    validated_data['player1_score'],
@@ -52,12 +44,10 @@ def match_post_api(request):
                                    validated_data['player1_id'],
                                    validated_data['player2_id'],
                                    validated_data['winner_id'])
-        print(tnx)                                                                 #check TX est bien passer sinon renvoyer une erreur
+        print(tnx['transactionHash'])                                                                 #check TX est bien passer sinon renvoyer une erreur
         return Response(data=match_data.data, status=status.HTTP_201_CREATED)
     else:
         return Response(match_data.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
 
 
 @api_view(['GET'])
@@ -90,30 +80,14 @@ def tournament_post_api(request):                   #Verif token
     if raw_tournament.is_valid():
         validated_data = raw_tournament.validated_data
         tournament_data = Tournament_group_data(validated_data)
-
-        print("match_ids:", tournament_data['match_ids'])
-        print("tournament_ids:", tournament_data['tournament_ids'][0])
-        print("player1_scores:", tournament_data['player1_scores'])
-        print("player2_scores:", tournament_data['player2_scores'])
-        print("player1_ids:", tournament_data['player1_ids'])
-        print("player2_ids:", tournament_data['player2_ids'])
-        print("winner_ids:", tournament_data['winner_ids'])
-
-        print(f" il y a {Tournament.objects.count()} match dans la db")
-        for tournament in Tournament.objects.all():
-            tnx = storescore.add_tournament(tournament.match_id, tournament.tournament_id, tournament.player1_score,
-                                            tournament.player2_score, tournament.player1_id, tournament.player2_id,
-                                            tournament.winner_id)
-            if tnx is not None:
-                print("la TX est reussi je delete")
-                delete_tournament_from_db(tournament.tournament_id)
+        tournament_routine_db(storescore)
         tnx = storescore.add_tournament(tournament_data['match_ids'],
-                                  tournament_data['tournament_ids'][0],
-                                  tournament_data['player1_scores'],
-                                  tournament_data['player2_scores'],
-                                  tournament_data['player1_ids'],
-                                  tournament_data['player2_ids'],
-                                  tournament_data['winner_ids'])
+                                        tournament_data['tournament_ids'][0],
+                                        tournament_data['player1_scores'],
+                                        tournament_data['player2_scores'],
+                                        tournament_data['player1_ids'],
+                                        tournament_data['player2_ids'],
+                                        tournament_data['winner_ids'])
         print(tnx)                                                              # check TX est bien passer sinon renvoyer une erreur
         return Response(data=validated_data, status=status.HTTP_201_CREATED)
     else:
@@ -213,3 +187,5 @@ def tournament_post_api(request):                   #Verif token
 #                delete_tournament_from_db(tournament.tournament_id)
 #    storescore.add_tournament([28, 29, 30, 31], 5, [1, 2, 3, 4], [4, 3, 2, 1], ["jeremy", "Mathieu", "jeremy", "Mathieu"], ["Johnny", "jeremy", "Mathieu", "jeremy"], ["jeremy", "Mathieu", "jeremy", "Mathieu"])
 #    return render(request, "main.html")
+
+
