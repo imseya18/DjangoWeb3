@@ -63,6 +63,7 @@ def match_routine_db(storescore):
                 print("la TX est reussi je delete")
                 delete_match_from_db(match.match_id)
 
+
 def convert_tournament_to_json(raw_tournament):
     tournament = []
     for match in raw_tournament:

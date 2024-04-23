@@ -44,7 +44,8 @@ def match_post_api(request):
                                    validated_data['player1_id'],
                                    validated_data['player2_id'],
                                    validated_data['winner_id'])
-        print(tnx['transactionHash'])                                                                 #check TX est bien passer sinon renvoyer une erreur
+        if tnx is not None:
+            print(tnx['transactionHash'].hex())                                                                 #check TX est bien passer sinon renvoyer une erreur
         return Response(data=match_data.data, status=status.HTTP_201_CREATED)
     else:
         return Response(match_data.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -81,6 +82,7 @@ def tournament_post_api(request):                   #Verif token
         validated_data = raw_tournament.validated_data
         tournament_data = Tournament_group_data(validated_data)
         tournament_routine_db(storescore)
+        balance_before = storescore.get_balance()
         tnx = storescore.add_tournament(tournament_data['match_ids'],
                                         tournament_data['tournament_ids'][0],
                                         tournament_data['player1_scores'],
@@ -88,6 +90,7 @@ def tournament_post_api(request):                   #Verif token
                                         tournament_data['player1_ids'],
                                         tournament_data['player2_ids'],
                                         tournament_data['winner_ids'])
+        print(f" la transaction a couter: {storescore.get_transaction_cost(balance_before, storescore.get_balance())}$")
         print(tnx)                                                              # check TX est bien passer sinon renvoyer une erreur
         return Response(data=validated_data, status=status.HTTP_201_CREATED)
     else:

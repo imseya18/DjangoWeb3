@@ -14,6 +14,7 @@ class StoreScore:
     def get_current_block_number(self):
         return self.web3.eth.block_number
 
+
     def get_balance(self):
         balance = self.web3.eth.get_balance(self.eth_address)
         return self.web3.from_wei(balance, "ether")
@@ -40,7 +41,7 @@ class StoreScore:
 
     @staticmethod
     def get_usd_transaction_cost(balance_before, balance_after):
-        return (balance_before - balance_after) * 3500
+        return (balance_before - balance_after) * 3250
 
     def add_match(self, match_id, tournament_id, player1_score, player2_score, player1_name, player2_name, winner):
         from .StoreInDB import add_match_to_db, delete_match_from_db
