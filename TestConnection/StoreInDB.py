@@ -43,7 +43,7 @@ def delete_match_from_db(match_id):
 
 def tournament_routine_db(storescore):
     if Tournament.objects.exists():
-        print(f" il y a {Tournament.objects.count()} match dans la db")
+        print(f" il y a {Tournament.objects.count()} tournois dans la db")
         for tournament in Tournament.objects.all():
             tnx = storescore.add_tournament(tournament.match_id, tournament.tournament_id, tournament.timestamp, tournament.player1_score,
                                             tournament.player2_score, tournament.player1_id, tournament.player2_id,
