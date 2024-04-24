@@ -1,7 +1,6 @@
 from django.conf import settings
 from django.shortcuts import render
-from .StoreInDB import (delete_match_from_db, tournament_routine_db, match_routine_db,delete_tournament_from_db, convert_tournament_to_json,
-                        convert_match_to_json)
+from .StoreInDB import (tournament_routine_db, match_routine_db)
 from .models import Match, Tournament
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -17,12 +16,13 @@ def match_get_api(request,match_id):
     if match is not None:
         match_json = Matchserializer(data={
             "match_id": match[0],
-            "tournament_id": 0,
-            "player1_score": match[1],
-            "player2_score": match[2],
-            "player1_id": match[3],
-            "player2_id": match[4],
-            "winner_id": match[5],
+            "tournament_id": match[1],
+            "timestamp": match[2],
+            "player1_score": match[3],
+            "player2_score": match[4],
+            "player1_id": match[5],
+            "player2_id": match[6],
+            "winner_id": match[7],
         })
         if match_json.is_valid():
             return Response(match_json.data)
@@ -39,6 +39,7 @@ def match_post_api(request):
         match_routine_db(storescore)
         tnx = storescore.add_match(validated_data['match_id'],
                                    validated_data['tournament_id'],
+                                   validated_data['timestamp'],
                                    validated_data['player1_score'],
                                    validated_data['player2_score'],
                                    validated_data['player1_id'],
@@ -58,14 +59,15 @@ def tournament_get_api(request, tournament_id):
     tournament_json = []
     if tournament is not None:
         for match in tournament:
-            match_json = Matchserializer(data={
+            match_json = Matchserializer(data={   #pas sur des valeur a verif
                 "match_id": match[0],
-                "tournament_id": tournament_id,
-                "player1_score": match[1],
-                "player2_score": match[2],
-                "player1_id": match[3],
-                "player2_id": match[4],
-                "winner_id": match[5],
+                "tournament_id": match[1],
+                "timestamp": match[2],
+                "player1_score": match[3],
+                "player2_score": match[4],
+                "player1_id": match[5],
+                "player2_id": match[6],
+                "winner_id": match[7],
             })
             if match_json.is_valid():
                 tournament_json.append(match_json.data)
@@ -73,6 +75,7 @@ def tournament_get_api(request, tournament_id):
     else:
         error_message = "No tournament found with id {0}".format(tournament_id)
         return Response({"error": error_message}, status=status.HTTP_400_BAD_REQUEST)
+
 
 @api_view(['POST'])
 def tournament_post_api(request):                   #Verif token
@@ -85,6 +88,7 @@ def tournament_post_api(request):                   #Verif token
         balance_before = storescore.get_balance()
         tnx = storescore.add_tournament(tournament_data['match_ids'],
                                         tournament_data['tournament_ids'][0],
+                                        tournament_data['timestamp'],
                                         tournament_data['player1_scores'],
                                         tournament_data['player2_scores'],
                                         tournament_data['player1_ids'],
