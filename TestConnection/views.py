@@ -37,19 +37,7 @@ def match_post_api(request):
     if match_data.is_valid():
         validated_data = match_data.validated_data
         match_routine_db(storescore)
-        tnx = storescore.add_match(validated_data['match_id'],
-                                   validated_data['tournament_id'],
-                                   validated_data['timestamp'],
-                                   validated_data['player1_score'],
-                                   validated_data['player2_score'],
-                                   validated_data['player1_id'],
-                                   validated_data['player2_id'],
-                                   validated_data['winner_id'])
-        if tnx is not None:
-            print(tnx['transactionHash'].hex())                                                                 #check TX est bien passer sinon renvoyer une erreur
-            return Response(data=match_data.data, status=status.HTTP_201_CREATED)
-        else:
-            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return storescore.add_match(validated_data)
     else:
         return Response(match_data.errors, status=status.HTTP_400_BAD_REQUEST)
 

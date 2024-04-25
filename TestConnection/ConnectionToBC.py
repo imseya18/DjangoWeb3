@@ -1,4 +1,6 @@
 from web3 import Web3
+from rest_framework.response import Response
+from rest_framework import status
 
 
 class StoreScore:
@@ -43,14 +45,13 @@ class StoreScore:
     def get_usd_transaction_cost(balance_before, balance_after):
         return (balance_before - balance_after) * 3250
 
-    def add_match(self, match_id, tournament_id, timestamp, player1_score, player2_score, player1_name, player2_name, winner):
+    def add_match(self, match_data):
         from .StoreInDB import add_match_to_db, delete_match_from_db
         try:
+            match_list = list(match_data.values())
             nonce = self.web3.eth.get_transaction_count(self.eth_address)
-            gas_estimate = self.contract.functions.addMatch(match_id, tournament_id, timestamp, player1_score, player2_score, player1_name,
-                                                            player2_name, winner).estimate_gas({'from': self.eth_address})
-            transaction = self.contract.functions.addMatch(match_id, tournament_id, timestamp,player1_score, player2_score,
-                                                           player1_name, player2_name, winner).build_transaction({
+            gas_estimate = self.contract.functions.addMatch(*match_list).estimate_gas({'from': self.eth_address})
+            transaction = self.contract.functions.addMatch(*match_list).build_transaction({
                 'chainId': self.web3.eth.chain_id,
                 'gas': gas_estimate,
                 'gasPrice': self.web3.eth.gas_price,
@@ -59,18 +60,23 @@ class StoreScore:
             signed_tx = self.web3.eth.account.sign_transaction(transaction, self.private_key)
             txn_hash = self.web3.eth.send_raw_transaction(signed_tx.rawTransaction)
             txn_receipt = self.web3.eth.wait_for_transaction_receipt(txn_hash)
-            return txn_receipt
+            print(txn_receipt['transactionHash'].hex())
+            return Response(data=match_data, status=status.HTTP_201_CREATED)
         except Exception as e:
             if "gas" in str(e).lower():
                 print(e)
                 print("erreur de gas")
-                add_match_to_db(match_id, tournament_id, timestamp, player1_score, player2_score, player1_name, player2_name, winner)
+                add_match_to_db(**match_data)
+                return Response(data=match_data, status=status.HTTP_201_CREATED)
             elif "reverted" in str(e).lower():
                 print("transaction revert:")
                 print(e)
-                delete_match_from_db(match_id)
+                delete_match_from_db(match_data['match_id'])
+                error_message = "this match already exists"
+                return Response({"error": error_message}, status=status.HTTP_400_BAD_REQUEST)
             else:
                 print(e)
+                return Response({"error": e}, status=status.HTTP_400_BAD_REQUEST)
 
     def add_tournament(self, match_id, tournament_id, timestamp, player1_score, player2_score, player1_name, player2_name, winner):
         from .StoreInDB import add_tournament_to_db, delete_tournament_from_db

@@ -22,11 +22,10 @@ def delete_tournament_from_db(tournament_id):
         print(f"tournament {tournament_id} n'est pas dans la db, pas de suppression")
 
 
-def add_match_to_db(match_id, tournament_id ,timestamp, player1_score, player2_score, player1_id, player2_id, winner_id):
-    if not Match.objects.filter(match_id=match_id).exists():
+def add_match_to_db(match_data):
+    if not Match.objects.filter(match_id=match_data['match_id']).exists():
         print("Je stock le match dans la DB")
-        new_match = Match(match_id=match_id, tournament_id=tournament_id, timestamp=timestamp, player1_score=player1_score, player2_score=player2_score, player1_id=player1_id,
-                          player2_id=player2_id, winner_id=winner_id)
+        new_match = Match(**match_data)
         new_match.save()
     else:
         print("match exist deja je ne le stock pas")
@@ -56,9 +55,10 @@ def match_routine_db(storescore):
     if Match.objects.exists():
         print(f" il y a {Match.objects.count()} match dans la db")
         for match in Match.objects.all():
-            tnx = storescore.add_match(match.match_id, match.tournament_id, match.timestamp, match.player1_score, match.player2_score,
-                                       match.player1_id,
-                                       match.player2_id, match.winner_id)
+            match_dict = match.__dict__
+            match_dict.pop('_state')
+            match_dict.pop('id')
+            tnx = storescore.add_match(match_dict)
             if tnx is not None:
                 print("la TX est reussi je delete")
                 delete_match_from_db(match.match_id)
