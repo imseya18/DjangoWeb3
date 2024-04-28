@@ -37,6 +37,14 @@ class StoreScore:
             print(e)
             return None
 
+    def get_match_by_player(self, player_id):
+        try:
+            matchs = self.contract.functions.getPlayerMatchs(player_id).call()
+            return matchs
+        except Exception as e:
+            print(e)
+            return None
+
     @staticmethod
     def get_transaction_cost(balance_before, balance_after):
         return balance_before - balance_after

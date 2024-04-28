@@ -1,15 +1,15 @@
 from rest_framework import serializers
-
+from django.core.validators import MinValueValidator
 
 class Matchserializer(serializers.Serializer):
-    match_id = serializers.IntegerField()
-    tournament_id = serializers.IntegerField()
-    timestamp = serializers.IntegerField()
-    player1_score = serializers.IntegerField()
-    player2_score = serializers.IntegerField()
-    player1_id = serializers.IntegerField()
-    player2_id = serializers.IntegerField()
-    winner_id = serializers.IntegerField()
+    match_id = serializers.IntegerField(validators=[MinValueValidator(0)])
+    tournament_id = serializers.IntegerField(validators=[MinValueValidator(0)])
+    timestamp = serializers.IntegerField(validators=[MinValueValidator(0)])
+    player1_score = serializers.IntegerField(validators=[MinValueValidator(0)])
+    player2_score = serializers.IntegerField(validators=[MinValueValidator(0)])
+    player1_id = serializers.IntegerField(validators=[MinValueValidator(0)])
+    player2_id = serializers.IntegerField(validators=[MinValueValidator(0)])
+    winner_id = serializers.IntegerField(validators=[MinValueValidator(0)])
 
 def Tournament_group_data(validated_data):
     matches = zip(*[item.values() for item in validated_data])

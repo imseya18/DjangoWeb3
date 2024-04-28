@@ -34,6 +34,7 @@ def match_get_api(request,match_id):
 def match_post_api(request):
     storescore = settings.STORE_SCORE
     match_data = Matchserializer(data=request.data)
+
     if match_data.is_valid():
         validated_data = match_data.validated_data
         match_routine_db(storescore)
@@ -49,7 +50,7 @@ def tournament_get_api(request, tournament_id):
     tournament_json = []
     if tournament is not None:
         for match in tournament:
-            match_json = Matchserializer(data={   #pas sur des valeur a verif
+            match_json = Matchserializer(data={
                 "match_id": match[0],
                 "tournament_id": match[1],
                 "timestamp": match[2],
@@ -65,6 +66,9 @@ def tournament_get_api(request, tournament_id):
     else:
         error_message = "No tournament found with id {0}".format(tournament_id)
         return Response({"error": error_message}, status=status.HTTP_400_BAD_REQUEST)
+
+
+
 
 
 @api_view(['POST'])
@@ -92,3 +96,28 @@ def tournament_post_api(request):                   #Verif token
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     else:
         return Response(raw_tournament.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['GET'])
+def GetMatchByPlayerApi(request, player_id):
+    storescore = settings.STORE_SCORE
+    matchs = storescore.get_match_by_player(player_id)
+    return_matchs = []
+    if matchs is not None:
+        for match in matchs:
+            match_json = Matchserializer(data={
+                "match_id": match[0],
+                "tournament_id": match[1],
+                "timestamp": match[2],
+                "player1_score": match[6],
+                "player2_score": match[7],
+                "player1_id": match[3],
+                "player2_id": match[4],
+                "winner_id": match[5],
+            })
+            if match_json.is_valid():
+                return_matchs.append(match_json.data)
+        return Response(return_matchs)
+    else:
+        error_message = "No matchs found with player_id {0}".format(player_id)
+        return Response({"error": error_message}, status=status.HTTP_400_BAD_REQUEST)
