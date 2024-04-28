@@ -86,32 +86,35 @@ class StoreScore:
                 print(e)
                 return Response({"error": e}, status=status.HTTP_400_BAD_REQUEST)
 
-    def add_tournament(self, match_id, tournament_id, timestamp, player1_score, player2_score, player1_name, player2_name, winner):
+    def add_tournament(self, tournament_data):
         from .StoreInDB import add_tournament_to_db, delete_tournament_from_db
         try:
+            tournament_list = list(tournament_data.values())
             nonce = self.web3.eth.get_transaction_count(self.eth_address)
-            gas_estimate = self.contract.functions.addTournament(match_id, tournament_id, timestamp, player1_score, player2_score, player1_name,
-                                                                 player2_name, winner).estimate_gas({'from': self.eth_address})
-            transaction = self.contract.functions.addTournament(match_id, tournament_id, timestamp, player1_score, player2_score,
-                                                                player1_name, player2_name, winner).build_transaction({
+            gas_estimate = self.contract.functions.addTournament(*tournament_list).estimate_gas({'from': self.eth_address})
+            transaction = self.contract.functions.addTournament(*tournament_list).build_transaction({
                 'chainId': self.web3.eth.chain_id,
-                'gas': gas_estimate,
+                'gas': 0,
                 'gasPrice': self.web3.eth.gas_price,
                 'nonce': nonce,
             })
             signed_tx = self.web3.eth.account.sign_transaction(transaction, self.private_key)
             txn_hash = self.web3.eth.send_raw_transaction(signed_tx.rawTransaction)
             txn_receipt = self.web3.eth.wait_for_transaction_receipt(txn_hash)
-            return txn_receipt
+            print(txn_receipt['transactionHash'].hex())
+            return Response(data=tournament_data, status=status.HTTP_201_CREATED)
         except Exception as e:
             if "gas" in str(e).lower():
                 print(e)
                 print("erreur de gas")
-                add_tournament_to_db(match_id, tournament_id, timestamp, player1_score, player2_score, player1_name, player2_name, winner)
+                add_tournament_to_db(**tournament_data)
+                return Response(data=tournament_data, status=status.HTTP_201_CREATED)
             elif "reverted" in str(e).lower():
                 print("transaction revert:")
                 print(e)
-                delete_tournament_from_db(tournament_id)
+                delete_tournament_from_db(tournament_data['tournament_id'])
+                error_message = "this tournament already exists"
+                return Response({"error": error_message}, status=status.HTTP_400_BAD_REQUEST)
             else:
-                print("Wrong address")
                 print(e)
+                return Response({"error": e}, status=status.HTTP_400_BAD_REQUEST)

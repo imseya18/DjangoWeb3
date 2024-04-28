@@ -69,8 +69,6 @@ def tournament_get_api(request, tournament_id):
 
 
 
-
-
 @api_view(['POST'])
 def tournament_post_api(request):                   #Verif token
     storescore = settings.STORE_SCORE
@@ -79,21 +77,7 @@ def tournament_post_api(request):                   #Verif token
         validated_data = raw_tournament.validated_data
         tournament_data = Tournament_group_data(validated_data)
         tournament_routine_db(storescore)
-        balance_before = storescore.get_balance()
-        tnx = storescore.add_tournament(tournament_data['match_ids'],
-                                        tournament_data['tournament_ids'][0],
-                                        tournament_data['timestamp'],
-                                        tournament_data['player1_scores'],
-                                        tournament_data['player2_scores'],
-                                        tournament_data['player1_ids'],
-                                        tournament_data['player2_ids'],
-                                        tournament_data['winner_ids'])
-        print(f" la transaction a couter: {storescore.get_transaction_cost(balance_before, storescore.get_balance())}$")
-        if tnx is not None:
-            print(tnx['transactionHash'].hex())
-            return Response(data=validated_data, status=status.HTTP_201_CREATED)
-        else:
-            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return storescore.add_tournament(tournament_data)
     else:
         return Response(raw_tournament.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -121,3 +105,16 @@ def GetMatchByPlayerApi(request, player_id):
     else:
         error_message = "No matchs found with player_id {0}".format(player_id)
         return Response({"error": error_message}, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['POST'])
+def test(request):
+    raw_tournament = Matchserializer(data=request.data, many=True)
+    if raw_tournament.is_valid():
+        validated_data = raw_tournament.validated_data
+        tournament_data = Tournament_group_data(validated_data)
+        print(tournament_data)
+        tournament_list = list(tournament_data.values())
+        print(tournament_list)
+    else:
+        return Response(raw_tournament.errors, status=status.HTTP_400_BAD_REQUEST)

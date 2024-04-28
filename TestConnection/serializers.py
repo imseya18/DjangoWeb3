@@ -17,8 +17,8 @@ def Tournament_group_data(validated_data):
 
     tournament_dict = {
         'match_ids': match_ids,
-        'tournament_ids': tournament_ids,
-        'timestamp': timestamp,
+        'tournament_id': tournament_ids[0],
+        'timestamps': timestamp,
         'player1_scores': player1_scores,
         'player2_scores': player2_scores,
         'player1_ids': player1_ids,

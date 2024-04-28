@@ -2,12 +2,11 @@ from .models import Match, Tournament
 from .serializers import Matchserializer, Tournament_group_data
 import json
 
-def add_tournament_to_db(match_id, tournament_id, timestamp, player1_score, player2_score, player1_id, player2_id, winner_id):
-    if not Tournament.objects.filter(tournament_id=tournament_id):
+
+def add_tournament_to_db(tournament_data):
+    if not Tournament.objects.filter(tournament_id=tournament_data['tournament_id']).exists():
         print("Je stock le tournois dans la DB")
-        new_tournament = Tournament(match_id=match_id, tournament_id=tournament_id, timestamp=timestamp, player1_score=player1_score,
-                                player2_score=player2_score, player1_id=player1_id, player2_id=player2_id,
-                                winner_id=winner_id)
+        new_tournament = Tournament(**tournament_data)
         new_tournament.save()
     else:
         print("tournois exist deja je ne le stock pas")
@@ -44,9 +43,10 @@ def tournament_routine_db(storescore):
     if Tournament.objects.exists():
         print(f" il y a {Tournament.objects.count()} tournois dans la db")
         for tournament in Tournament.objects.all():
-            tnx = storescore.add_tournament(tournament.match_id, tournament.tournament_id, tournament.timestamp, tournament.player1_score,
-                                            tournament.player2_score, tournament.player1_id, tournament.player2_id,
-                                            tournament.winner_id)
+            tournament_dict = tournament.__dict__
+            tournament_dict.pop('_state')
+            tournament_dict.pop('id')
+            tnx = storescore.add_tournament(tournament_dict)
             if tnx is not None:
                 print("la TX est reussi je delete")
                 delete_tournament_from_db(tournament.tournament_id)

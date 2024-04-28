@@ -4,18 +4,18 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 
 
 class Tournament(models.Model):
-    match_id = ArrayField(models.BigIntegerField(), default=list)
+    match_ids = ArrayField(models.BigIntegerField(), default=list)
     tournament_id = models.BigIntegerField()
-    timestamp = ArrayField(models.BigIntegerField(), default=list)
-    player1_score = ArrayField(models.BigIntegerField(
+    timestamps = ArrayField(models.BigIntegerField(), default=list)
+    player1_scores = ArrayField(models.BigIntegerField(
             validators=[MinValueValidator(limit_value=0),
                         MaxValueValidator(limit_value=255)]), default=list)
-    player2_score = ArrayField(models.BigIntegerField(
+    player2_scores = ArrayField(models.BigIntegerField(
             validators=[MinValueValidator(limit_value=0),
                         MaxValueValidator(limit_value=255)]), default=list)
-    player1_id = ArrayField(models.BigIntegerField(), default=list)
-    player2_id = ArrayField(models.BigIntegerField(), default=list)
-    winner_id = ArrayField(models.BigIntegerField(), default=list)
+    player1_ids = ArrayField(models.BigIntegerField(), default=list)
+    player2_ids = ArrayField(models.BigIntegerField(), default=list)
+    winner_ids = ArrayField(models.BigIntegerField(), default=list)
 
 
 class Match(models.Model):

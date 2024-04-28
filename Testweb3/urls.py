@@ -25,5 +25,6 @@ urlpatterns = [
     path('match/post/', views.match_post_api),
     path('tournament/get/<int:tournament_id>/', views.tournament_get_api),
     path('player/get/<int:player_id>/', views.GetMatchByPlayerApi),
+    path('test/', views.test),
     path('tournament/post/', views.tournament_post_api),
 ]
