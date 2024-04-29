@@ -61,7 +61,7 @@ class StoreScore:
             gas_estimate = self.contract.functions.addMatch(*match_list).estimate_gas({'from': self.eth_address})
             transaction = self.contract.functions.addMatch(*match_list).build_transaction({
                 'chainId': self.web3.eth.chain_id,
-                'gas': gas_estimate,
+                'gas': 0,
                 'gasPrice': self.web3.eth.gas_price,
                 'nonce': nonce,
             })
@@ -74,7 +74,7 @@ class StoreScore:
             if "gas" in str(e).lower():
                 print(e)
                 print("erreur de gas")
-                add_match_to_db(**match_data)
+                add_match_to_db(match_data)
                 error_message = "Problem with blockchain, your data is safely stored in the database and will be stored in the blockchain ASAP."
                 return Response({"error": error_message}, status=status.HTTP_200_OK)
             elif "reverted" in str(e).lower():
@@ -95,7 +95,7 @@ class StoreScore:
             gas_estimate = self.contract.functions.addTournament(*tournament_list).estimate_gas({'from': self.eth_address})
             transaction = self.contract.functions.addTournament(*tournament_list).build_transaction({
                 'chainId': self.web3.eth.chain_id,
-                'gas': gas_estimate,
+                'gas': 0,
                 'gasPrice': self.web3.eth.gas_price,
                 'nonce': nonce,
             })

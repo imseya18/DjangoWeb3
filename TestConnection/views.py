@@ -1,6 +1,6 @@
 from django.conf import settings
 from django.shortcuts import render
-from .StoreInDB import (tournament_routine_db, match_routine_db)
+from .StoreInDB import (tournament_routine_db, match_routine_db, get_match_by_playerId_db)
 from .models import Match, Tournament
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -85,10 +85,15 @@ def tournament_post_api(request):                   #Verif token
 @api_view(['GET'])
 def GetMatchByPlayerApi(request, player_id):
     storescore = settings.STORE_SCORE
-    matchs = storescore.get_match_by_player(player_id)
+    matchs_from_BC = storescore.get_match_by_player(player_id)
+    matchs_from_DB = get_match_by_playerId_db(player_id)
+    #if matchs_from_BC and matchs_from_DB is None:
+    #    error_message = "No matchs found with player_id {0}".format(player_id)
+    #    return Response({"error": error_message}, status=status.HTTP_400_BAD_REQUEST)
+    #else:
     return_matchs = []
-    if matchs is not None:
-        for match in matchs:
+    if matchs_from_BC is not None:
+        for match in matchs_from_BC:
             match_json = Matchserializer(data={
                 "match_id": match[0],
                 "tournament_id": match[1],
@@ -100,21 +105,15 @@ def GetMatchByPlayerApi(request, player_id):
                 "winner_id": match[5],
             })
             if match_json.is_valid():
-                return_matchs.append(match_json.data)
-        return Response(return_matchs)
-    else:
-        error_message = "No matchs found with player_id {0}".format(player_id)
-        return Response({"error": error_message}, status=status.HTTP_400_BAD_REQUEST)
+                match_data = match_json.data
+                match_data['from_blockchain'] = True
+                return_matchs.append(match_data)
+    return_matchs = return_matchs + matchs_from_DB
+    return Response(return_matchs, status=status.HTTP_200_OK)
 
 
-@api_view(['POST'])
-def test(request):
-    raw_tournament = Matchserializer(data=request.data, many=True)
-    if raw_tournament.is_valid():
-        validated_data = raw_tournament.validated_data
-        tournament_data = Tournament_group_data(validated_data)
-        print(tournament_data)
-        tournament_list = list(tournament_data.values())
-        print(tournament_list)
-    else:
-        return Response(raw_tournament.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['get'])
+def test(request, player_id):
+    get_match_by_playerId_db(player_id)
+

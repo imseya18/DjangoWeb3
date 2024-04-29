@@ -1,7 +1,8 @@
 from .models import Match, Tournament
 from .serializers import Matchserializer, Tournament_group_data
 import json
-
+from django.db.models import Q
+from tabulate import tabulate
 
 def add_tournament_to_db(tournament_data):
     if not Tournament.objects.filter(tournament_id=tournament_data['tournament_id']).exists():
@@ -63,3 +64,18 @@ def match_routine_db(storescore):
             if "201" in str(return_code).lower():
                 print("la TX est reussi je delete")
                 delete_match_from_db(match.match_id)
+
+
+def get_match_by_playerId_db(playerId):
+    if Match.objects.filter(Q(player1_id=playerId) | Q(player2_id=playerId)).exists():
+        matches = Match.objects.filter(Q(player1_id=playerId) | Q(player2_id=playerId))
+        match_list = list(matches.values())
+        serialize = Matchserializer(data=match_list, many=True)
+        if serialize.is_valid():
+            validate_data = serialize.validated_data
+            for match in validate_data:
+                match['from_blockchain'] = False
+            print(tabulate(validate_data, headers="keys", tablefmt="grid"))
+            return validate_data
+        else:
+            return []
