@@ -46,10 +46,11 @@ def tournament_routine_db(storescore):
             tournament_dict = tournament.__dict__
             tournament_dict.pop('_state')
             tournament_dict.pop('id')
-            tnx = storescore.add_tournament(tournament_dict)
-            if tnx is not None:
+            return_code = storescore.add_tournament(tournament_dict)
+            if "201" in str(return_code).lower():
                 print("la TX est reussi je delete")
                 delete_tournament_from_db(tournament.tournament_id)
+
 
 def match_routine_db(storescore):
     if Match.objects.exists():
@@ -58,7 +59,7 @@ def match_routine_db(storescore):
             match_dict = match.__dict__
             match_dict.pop('_state')
             match_dict.pop('id')
-            tnx = storescore.add_match(match_dict)
-            if tnx is not None:
+            return_code = storescore.add_match(match_dict)
+            if "201" in str(return_code).lower():
                 print("la TX est reussi je delete")
                 delete_match_from_db(match.match_id)

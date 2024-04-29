@@ -11,6 +11,7 @@ class Matchserializer(serializers.Serializer):
     player2_id = serializers.IntegerField(validators=[MinValueValidator(0)])
     winner_id = serializers.IntegerField(validators=[MinValueValidator(0)])
 
+
 def Tournament_group_data(validated_data):
     matches = zip(*[item.values() for item in validated_data])
     match_ids, tournament_ids, timestamp, player1_scores, player2_scores, player1_ids, player2_ids, winner_ids = map(list, matches)
