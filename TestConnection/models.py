@@ -27,3 +27,9 @@ class Match(models.Model):
     player1_id = models.BigIntegerField()
     player2_id = models.BigIntegerField()
     winner_id = models.BigIntegerField()
+
+
+class TnxHash(models.Model):
+    match_id = models.BigIntegerField(blank=True, null=True)
+    tournament_id = models.BigIntegerField(blank=True, null=True)
+    tnx_hash = models.CharField(max_length=255)

@@ -1,4 +1,4 @@
-from .models import Match, Tournament
+from .models import Match, Tournament,TnxHash
 from .serializers import Matchserializer, Tournament_group_data
 import json
 from django.db.models import Q
@@ -80,3 +80,8 @@ def get_match_by_playerId_db(playerId):
             return validate_data
     else:
         return None
+
+
+def add_tnx_to_db(match_id, tournament_id, tnx):
+    new_tnx = TnxHash(match_id=match_id, tournament_id=tournament_id, tnx_hash=tnx)
+    new_tnx.save()

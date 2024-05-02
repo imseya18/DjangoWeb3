@@ -4,7 +4,7 @@ from .StoreInDB import (tournament_routine_db, match_routine_db, get_match_by_pl
 from .models import Match, Tournament
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from .serializers import Matchserializer, Tournament_group_data
+from .serializers import Matchserializer, Tournament_group_data, SendDbMatchToSerializer
 from rest_framework import status
 from rest_framework.decorators import api_view
 
@@ -14,27 +14,18 @@ def match_get_api(request,match_id):
     storescore = settings.STORE_SCORE
     match = storescore.get_match_by_id(match_id)
     if match is not None:
-        match_json = Matchserializer(data={
-            "match_id": match[0],
-            "tournament_id": match[1],
-            "timestamp": match[2],
-            "player1_score": match[6],
-            "player2_score": match[7],
-            "player1_id": match[3],
-            "player2_id": match[4],
-            "winner_id": match[5],
-        })
+        match_json = SendDbMatchToSerializer(match)
         if match_json.is_valid():
             return Response(match_json.data)
     else:
         error_message = "No match found with id {0}".format(match_id)
         return Response({"error": error_message}, status=status.HTTP_404_NOT_FOUND)
 
+
 @api_view(['POST'])  #Verif token
 def match_post_api(request):
     storescore = settings.STORE_SCORE
     match_data = Matchserializer(data=request.data)
-
     if match_data.is_valid():
         validated_data = match_data.validated_data
         match_routine_db(storescore)
@@ -50,23 +41,13 @@ def tournament_get_api(request, tournament_id):
     tournament_json = []
     if tournament is not None:
         for match in tournament:
-            match_json = Matchserializer(data={
-                "match_id": match[0],
-                "tournament_id": match[1],
-                "timestamp": match[2],
-                "player1_score": match[6],
-                "player2_score": match[7],
-                "player1_id": match[3],
-                "player2_id": match[4],
-                "winner_id": match[5],
-            })
+            match_json = SendDbMatchToSerializer(match)
             if match_json.is_valid():
                 tournament_json.append(match_json.data)
         return Response(tournament_json)
     else:
         error_message = "No tournament found with id {0}".format(tournament_id)
         return Response({"error": error_message}, status=status.HTTP_400_BAD_REQUEST)
-
 
 
 @api_view(['POST'])
@@ -90,7 +71,6 @@ def GetMatchByPlayerApi(request, player_id):
     print(f'valeur de match_BC: {matchs_from_BC}')
     print(f'valeur de match_DB: {matchs_from_DB}')
     if matchs_from_BC is None and matchs_from_DB is None:
-        print('on est dans le return nonde')
         error_message = "No matchs found with player_id {0}".format(player_id)
         return Response({"error": error_message}, status=status.HTTP_400_BAD_REQUEST)
     else:
@@ -99,23 +79,13 @@ def GetMatchByPlayerApi(request, player_id):
         return_matchs = []
         if matchs_from_BC is not None:
             for match in matchs_from_BC:
-                match_json = Matchserializer(data={
-                    "match_id": match[0],
-                    "tournament_id": match[1],
-                    "timestamp": match[2],
-                    "player1_score": match[6],
-                    "player2_score": match[7],
-                    "player1_id": match[3],
-                    "player2_id": match[4],
-                    "winner_id": match[5],
-                })
+                match_json = SendDbMatchToSerializer(match)
                 if match_json.is_valid():
                     match_data = match_json.data
                     match_data['from_blockchain'] = True
                     return_matchs.append(match_data)
         return_matchs = return_matchs + matchs_from_DB
         return Response(return_matchs, status=status.HTTP_200_OK)
-
 
 
 @api_view(['get'])

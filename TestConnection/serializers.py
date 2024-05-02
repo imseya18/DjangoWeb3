@@ -29,3 +29,17 @@ def Tournament_group_data(validated_data):
         'winner_ids': winner_ids
     }
     return tournament_dict
+
+
+def SendDbMatchToSerializer(match):
+    match_json = Matchserializer(data={
+        "match_id": match[0],
+        "tournament_id": match[1],
+        "timestamp": match[2],
+        "player1_score": match[6],
+        "player2_score": match[7],
+        "player1_id": match[3],
+        "player2_id": match[4],
+        "winner_id": match[5],
+    })
+    return match_json

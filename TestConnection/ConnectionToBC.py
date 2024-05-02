@@ -54,14 +54,14 @@ class StoreScore:
         return (balance_before - balance_after) * 3250
 
     def add_match(self, match_data):
-        from .StoreInDB import add_match_to_db, delete_match_from_db
+        from .StoreInDB import add_match_to_db, delete_match_from_db, add_tnx_to_db
         try:
             match_list = list(match_data.values())
             nonce = self.web3.eth.get_transaction_count(self.eth_address)
             gas_estimate = self.contract.functions.addMatch(*match_list).estimate_gas({'from': self.eth_address})
             transaction = self.contract.functions.addMatch(*match_list).build_transaction({
                 'chainId': self.web3.eth.chain_id,
-                'gas': 0,
+                'gas': gas_estimate,
                 'gasPrice': self.web3.eth.gas_price,
                 'nonce': nonce,
             })
@@ -69,6 +69,7 @@ class StoreScore:
             txn_hash = self.web3.eth.send_raw_transaction(signed_tx.rawTransaction)
             txn_receipt = self.web3.eth.wait_for_transaction_receipt(txn_hash)
             print(f' txn_hash = {txn_hash.hex()}')
+            add_tnx_to_db(match_data['match_id'], match_data['tournament_id'], txn_hash.hex())
             return Response(data=match_data, status=status.HTTP_201_CREATED)
         except Exception as e:
             if "gas" in str(e).lower():
@@ -84,18 +85,19 @@ class StoreScore:
                 error_message = "this match already exists"
                 return Response({"error": error_message}, status=status.HTTP_400_BAD_REQUEST)
             else:
+                print('cest une erreur que je connais pas')
                 print(e)
                 return Response({"error": e}, status=status.HTTP_400_BAD_REQUEST)
 
     def add_tournament(self, tournament_data):
-        from .StoreInDB import add_tournament_to_db, delete_tournament_from_db
+        from .StoreInDB import add_tournament_to_db, delete_tournament_from_db, add_tnx_to_db
         try:
             tournament_list = list(tournament_data.values())
             nonce = self.web3.eth.get_transaction_count(self.eth_address)
             gas_estimate = self.contract.functions.addTournament(*tournament_list).estimate_gas({'from': self.eth_address})
             transaction = self.contract.functions.addTournament(*tournament_list).build_transaction({
                 'chainId': self.web3.eth.chain_id,
-                'gas': 0,
+                'gas': gas_estimate,
                 'gasPrice': self.web3.eth.gas_price,
                 'nonce': nonce,
             })
@@ -103,6 +105,7 @@ class StoreScore:
             txn_hash = self.web3.eth.send_raw_transaction(signed_tx.rawTransaction)
             txn_receipt = self.web3.eth.wait_for_transaction_receipt(txn_hash)
             print(f' txn_hash = {txn_hash.hex()}')
+            add_tnx_to_db(0, tournament_data['tournament_id'], txn_hash.hex())
             return Response(data=tournament_data, status=status.HTTP_201_CREATED)
         except Exception as e:
             if "gas" in str(e).lower():
