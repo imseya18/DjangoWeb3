@@ -1,4 +1,4 @@
-from .models import Match, Tournament,TnxHash
+from .models import Match, Tournament,TxHash
 from .serializers import Matchserializer, Tournament_group_data
 import json
 from django.db.models import Q
@@ -68,7 +68,6 @@ def match_routine_db(storescore):
 
 def get_match_by_playerId_db(playerId):
     matches = Match.objects.filter(Q(player1_id=playerId) | Q(player2_id=playerId))
-    print(matches)
     if matches.exists():
         match_list = list(matches.values())
         serialize = Matchserializer(data=match_list, many=True)
@@ -82,6 +81,17 @@ def get_match_by_playerId_db(playerId):
         return None
 
 
-def add_tnx_to_db(match_id, tournament_id, tnx):
-    new_tnx = TnxHash(match_id=match_id, tournament_id=tournament_id, tnx_hash=tnx)
+def add_tx_to_db(match_id, tournament_id, tx):
+    new_tnx = TxHash(match_id=match_id, tournament_id=tournament_id, tx_hash=tx)
     new_tnx.save()
+
+
+def get_tx_from_db(data):
+    if data['tournament_id'] == 0 and TxHash.objects.filter(match_id=data['match_id']).exists():
+        tnx = TxHash.objects.get(match_id=data['match_id'])
+        return tnx.tx_hash
+    elif data['tournament_id'] != 0 and TxHash.objects.filter(tournament_id=data['tournament_id']).exists():
+        tnx = TxHash.objects.get(tournament_id=data['tournament_id'])
+        return tnx.tx_hash
+    else:
+        return None

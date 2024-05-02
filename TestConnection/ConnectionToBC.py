@@ -54,7 +54,7 @@ class StoreScore:
         return (balance_before - balance_after) * 3250
 
     def add_match(self, match_data):
-        from .StoreInDB import add_match_to_db, delete_match_from_db, add_tnx_to_db
+        from .StoreInDB import add_match_to_db, delete_match_from_db, add_tx_to_db
         try:
             match_list = list(match_data.values())
             nonce = self.web3.eth.get_transaction_count(self.eth_address)
@@ -69,7 +69,7 @@ class StoreScore:
             txn_hash = self.web3.eth.send_raw_transaction(signed_tx.rawTransaction)
             txn_receipt = self.web3.eth.wait_for_transaction_receipt(txn_hash)
             print(f' txn_hash = {txn_hash.hex()}')
-            add_tnx_to_db(match_data['match_id'], match_data['tournament_id'], txn_hash.hex())
+            add_tx_to_db(match_data['match_id'], match_data['tournament_id'], txn_hash.hex())
             return Response(data=match_data, status=status.HTTP_201_CREATED)
         except Exception as e:
             if "gas" in str(e).lower():
@@ -90,7 +90,7 @@ class StoreScore:
                 return Response({"error": e}, status=status.HTTP_400_BAD_REQUEST)
 
     def add_tournament(self, tournament_data):
-        from .StoreInDB import add_tournament_to_db, delete_tournament_from_db, add_tnx_to_db
+        from .StoreInDB import add_tournament_to_db, delete_tournament_from_db, add_tx_to_db
         try:
             tournament_list = list(tournament_data.values())
             nonce = self.web3.eth.get_transaction_count(self.eth_address)
@@ -105,7 +105,7 @@ class StoreScore:
             txn_hash = self.web3.eth.send_raw_transaction(signed_tx.rawTransaction)
             txn_receipt = self.web3.eth.wait_for_transaction_receipt(txn_hash)
             print(f' txn_hash = {txn_hash.hex()}')
-            add_tnx_to_db(0, tournament_data['tournament_id'], txn_hash.hex())
+            add_tx_to_db(0, tournament_data['tournament_id'], txn_hash.hex())
             return Response(data=tournament_data, status=status.HTTP_201_CREATED)
         except Exception as e:
             if "gas" in str(e).lower():

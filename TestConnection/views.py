@@ -1,6 +1,6 @@
 from django.conf import settings
 from django.shortcuts import render
-from .StoreInDB import (tournament_routine_db, match_routine_db, get_match_by_playerId_db)
+from .StoreInDB import (tournament_routine_db, match_routine_db, get_match_by_playerId_db, get_tx_from_db)
 from .models import Match, Tournament
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -83,6 +83,7 @@ def GetMatchByPlayerApi(request, player_id):
                 if match_json.is_valid():
                     match_data = match_json.data
                     match_data['from_blockchain'] = True
+                    match_data['tx_hash'] = get_tx_from_db(match_data)
                     return_matchs.append(match_data)
         return_matchs = return_matchs + matchs_from_DB
         return Response(return_matchs, status=status.HTTP_200_OK)

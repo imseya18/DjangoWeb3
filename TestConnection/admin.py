@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from TestConnection.models import Tournament, Match, TnxHash
+from TestConnection.models import Tournament, Match, TxHash
 
 
 # Register your models here.
@@ -14,9 +14,9 @@ class MatchAdmin(admin.ModelAdmin):
                     'player1_id', 'player2_id', 'winner_id')
 
 class TnxAdmin(admin.ModelAdmin):
-    list_display = [field.name for field in TnxHash._meta.fields]
+    list_display = [field.name for field in TxHash._meta.fields]
 
 
 admin.site.register(Tournament, TournamentAdmin)
 admin.site.register(Match, MatchAdmin)
-admin.site.register(TnxHash, TnxAdmin)
+admin.site.register(TxHash, TnxAdmin)
