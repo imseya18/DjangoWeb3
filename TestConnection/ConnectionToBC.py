@@ -68,7 +68,7 @@ class StoreScore:
             signed_tx = self.web3.eth.account.sign_transaction(transaction, self.private_key)
             txn_hash = self.web3.eth.send_raw_transaction(signed_tx.rawTransaction)
             txn_receipt = self.web3.eth.wait_for_transaction_receipt(txn_hash)
-            print(txn_receipt['transactionHash'].hex())
+            print(f' txn_hash = {txn_hash.hex()}')
             return Response(data=match_data, status=status.HTTP_201_CREATED)
         except Exception as e:
             if "gas" in str(e).lower():
@@ -102,7 +102,7 @@ class StoreScore:
             signed_tx = self.web3.eth.account.sign_transaction(transaction, self.private_key)
             txn_hash = self.web3.eth.send_raw_transaction(signed_tx.rawTransaction)
             txn_receipt = self.web3.eth.wait_for_transaction_receipt(txn_hash)
-            print(txn_receipt['transactionHash'].hex())
+            print(f' txn_hash = {txn_hash.hex()}')
             return Response(data=tournament_data, status=status.HTTP_201_CREATED)
         except Exception as e:
             if "gas" in str(e).lower():

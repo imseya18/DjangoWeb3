@@ -67,8 +67,9 @@ def match_routine_db(storescore):
 
 
 def get_match_by_playerId_db(playerId):
-    if Match.objects.filter(Q(player1_id=playerId) | Q(player2_id=playerId)).exists():
-        matches = Match.objects.filter(Q(player1_id=playerId) | Q(player2_id=playerId))
+    matches = Match.objects.filter(Q(player1_id=playerId) | Q(player2_id=playerId))
+    print(matches)
+    if matches.exists():
         match_list = list(matches.values())
         serialize = Matchserializer(data=match_list, many=True)
         if serialize.is_valid():
@@ -77,5 +78,5 @@ def get_match_by_playerId_db(playerId):
                 match['from_blockchain'] = False
             print(tabulate(validate_data, headers="keys", tablefmt="grid"))
             return validate_data
-        else:
-            return []
+    else:
+        return None

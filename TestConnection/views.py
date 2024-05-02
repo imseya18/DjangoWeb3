@@ -87,29 +87,34 @@ def GetMatchByPlayerApi(request, player_id):
     storescore = settings.STORE_SCORE
     matchs_from_BC = storescore.get_match_by_player(player_id)
     matchs_from_DB = get_match_by_playerId_db(player_id)
-    #if matchs_from_BC and matchs_from_DB is None:
-    #    error_message = "No matchs found with player_id {0}".format(player_id)
-    #    return Response({"error": error_message}, status=status.HTTP_400_BAD_REQUEST)
-    #else:
-    return_matchs = []
-    if matchs_from_BC is not None:
-        for match in matchs_from_BC:
-            match_json = Matchserializer(data={
-                "match_id": match[0],
-                "tournament_id": match[1],
-                "timestamp": match[2],
-                "player1_score": match[6],
-                "player2_score": match[7],
-                "player1_id": match[3],
-                "player2_id": match[4],
-                "winner_id": match[5],
-            })
-            if match_json.is_valid():
-                match_data = match_json.data
-                match_data['from_blockchain'] = True
-                return_matchs.append(match_data)
-    return_matchs = return_matchs + matchs_from_DB
-    return Response(return_matchs, status=status.HTTP_200_OK)
+    print(f'valeur de match_BC: {matchs_from_BC}')
+    print(f'valeur de match_DB: {matchs_from_DB}')
+    if matchs_from_BC is None and matchs_from_DB is None:
+        print('on est dans le return nonde')
+        error_message = "No matchs found with player_id {0}".format(player_id)
+        return Response({"error": error_message}, status=status.HTTP_400_BAD_REQUEST)
+    else:
+        if matchs_from_DB is None:
+            matchs_from_DB = []
+        return_matchs = []
+        if matchs_from_BC is not None:
+            for match in matchs_from_BC:
+                match_json = Matchserializer(data={
+                    "match_id": match[0],
+                    "tournament_id": match[1],
+                    "timestamp": match[2],
+                    "player1_score": match[6],
+                    "player2_score": match[7],
+                    "player1_id": match[3],
+                    "player2_id": match[4],
+                    "winner_id": match[5],
+                })
+                if match_json.is_valid():
+                    match_data = match_json.data
+                    match_data['from_blockchain'] = True
+                    return_matchs.append(match_data)
+        return_matchs = return_matchs + matchs_from_DB
+        return Response(return_matchs, status=status.HTTP_200_OK)
 
 
 
