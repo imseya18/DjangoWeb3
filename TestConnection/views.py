@@ -29,7 +29,7 @@ def match_post_api(request):
     if match_data.is_valid():
         validated_data = match_data.validated_data
         match_routine_db(storescore)
-        return storescore.add_match(validated_data)
+        return storescore.add_match(validated_data, False)
     else:
         return Response(match_data.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -58,7 +58,7 @@ def tournament_post_api(request):                   #Verif token
         validated_data = raw_tournament.validated_data
         tournament_data = Tournament_group_data(validated_data)
         tournament_routine_db(storescore)
-        return storescore.add_tournament(tournament_data)
+        return storescore.add_tournament(tournament_data, False)
     else:
         return Response(raw_tournament.errors, status=status.HTTP_400_BAD_REQUEST)
 

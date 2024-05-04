@@ -53,7 +53,7 @@ class StoreScore:
     def get_usd_transaction_cost(balance_before, balance_after):
         return (balance_before - balance_after) * 3250
 
-    def add_match(self, match_data):
+    def add_match(self, match_data, from_db):
         from .StoreInDB import add_match_to_db, delete_match_from_db, add_tx_to_db
         try:
             match_list = list(match_data.values())
@@ -70,6 +70,8 @@ class StoreScore:
             txn_receipt = self.web3.eth.wait_for_transaction_receipt(txn_hash)
             print(f' txn_hash = {txn_hash.hex()}')
             add_tx_to_db(match_data['match_id'], match_data['tournament_id'], txn_hash.hex())
+            if from_db:
+                return True
             return Response(data=match_data, status=status.HTTP_201_CREATED)
         except Exception as e:
             if "gas" in str(e).lower():
@@ -89,7 +91,7 @@ class StoreScore:
                 print(e)
                 return Response({"error": e}, status=status.HTTP_400_BAD_REQUEST)
 
-    def add_tournament(self, tournament_data):
+    def add_tournament(self, tournament_data, from_db):
         from .StoreInDB import add_tournament_to_db, delete_tournament_from_db, add_tx_to_db
         try:
             tournament_list = list(tournament_data.values())
@@ -106,6 +108,8 @@ class StoreScore:
             txn_receipt = self.web3.eth.wait_for_transaction_receipt(txn_hash)
             print(f' txn_hash = {txn_hash.hex()}')
             add_tx_to_db(0, tournament_data['tournament_id'], txn_hash.hex())
+            if from_db:
+                return True
             return Response(data=tournament_data, status=status.HTTP_201_CREATED)
         except Exception as e:
             if "gas" in str(e).lower():
