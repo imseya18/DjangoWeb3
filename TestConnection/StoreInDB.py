@@ -78,8 +78,45 @@ def get_match_by_playerId_db(playerId):
             print(tabulate(validate_data, headers="keys", tablefmt="grid"))
             return validate_data
     else:
-        return None
+        return []
 
+
+def get_tournament_match_by_playerId_db(playerId):
+    tournaments_with_player = Tournament.objects.filter(
+        Q(player1_ids__contains=[playerId]) | Q(player2_ids__contains=[playerId])
+    )
+    final_match_list = []
+    if tournaments_with_player.exists():
+        for tournament in tournaments_with_player:
+            indices = [i for i, x in enumerate(tournament.player1_ids) if x == playerId]
+            indices.extend([i for i, x in enumerate(tournament.player2_ids) if x == playerId])
+            for indice in indices:
+                match_data = {
+                    'match_id': tournament.match_ids[indice],
+                    'tournament_id': tournament.tournament_id,
+                    'timestamp': tournament.timestamps[indice],
+                    'player1_id': tournament.player1_ids[indice],
+                    'player2_id': tournament.player2_ids[indice],
+                    'player1_score': tournament.player1_scores[indice],
+                    'player2_score': tournament.player2_scores[indice],
+                    'winner_id': tournament.winner_ids[indice]
+                }
+                serialize = Matchserializer(data=match_data)
+                if serialize.is_valid():
+                    validate_data = serialize.validated_data
+                    final_match_list.append(validate_data)
+                else:
+                    print(serialize.errors)
+        return final_match_list
+    else:
+        return []
+
+
+def get_match_and_tournament_by_playerId(playerId):
+    matchs = get_match_by_playerId_db(playerId)
+    tournament_matchs = get_tournament_match_by_playerId_db(playerId)
+    result = matchs + tournament_matchs
+    return result
 
 def add_tx_to_db(match_id, tournament_id, tx):
     new_tnx = TxHash(match_id=match_id, tournament_id=tournament_id, tx_hash=tx)
