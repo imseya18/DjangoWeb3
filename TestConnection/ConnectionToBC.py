@@ -61,7 +61,7 @@ class StoreScore:
             gas_estimate = self.contract.functions.addMatch(*match_list).estimate_gas({'from': self.eth_address})
             transaction = self.contract.functions.addMatch(*match_list).build_transaction({
                 'chainId': self.web3.eth.chain_id,
-                'gas': 0,
+                'gas': gas_estimate,
                 'gasPrice': self.web3.eth.gas_price,
                 'nonce': nonce,
             })
@@ -99,7 +99,7 @@ class StoreScore:
             gas_estimate = self.contract.functions.addTournament(*tournament_list).estimate_gas({'from': self.eth_address})
             transaction = self.contract.functions.addTournament(*tournament_list).build_transaction({
                 'chainId': self.web3.eth.chain_id,
-                'gas': 0,
+                'gas': gas_estimate,
                 'gasPrice': self.web3.eth.gas_price,
                 'nonce': nonce,
             })

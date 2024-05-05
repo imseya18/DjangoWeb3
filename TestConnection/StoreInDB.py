@@ -104,6 +104,7 @@ def get_tournament_match_by_playerId_db(playerId):
                 serialize = Matchserializer(data=match_data)
                 if serialize.is_valid():
                     validate_data = serialize.validated_data
+                    validate_data['from_blockchain'] = False
                     final_match_list.append(validate_data)
                 else:
                     print(serialize.errors)
