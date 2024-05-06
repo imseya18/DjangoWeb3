@@ -64,7 +64,7 @@ def match_routine_db(storescore):
             match_dict.pop('id')
             return_code = storescore.add_match(match_dict, True)
             if return_code is True:
-                logger.info(f"TX for tournament {match.match_id} is a success")
+                logger.info(f"TX for match {match.match_id} is a success")
                 delete_match_from_db(match.match_id)
 
 

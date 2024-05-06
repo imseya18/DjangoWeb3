@@ -13,8 +13,9 @@ class ColorFormatter(logging.Formatter):
     }
 
     def format(self, record):
+        self.datefmt = '%Y-%m-%d %H:%M:%S'
         log_fmt = self.FORMATS.get(record.levelno)
-        formatter = logging.Formatter(log_fmt)
+        formatter = logging.Formatter(log_fmt, datefmt=self.datefmt)
         return formatter.format(record)
 
 
@@ -22,7 +23,7 @@ def setup_logger(name):
     logger = logging.getLogger(name)
     logger.setLevel(logging.DEBUG)
 
-    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
 
     file_handler = logging.FileHandler('application.log')
     file_handler.setFormatter(formatter)

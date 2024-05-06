@@ -70,8 +70,8 @@ def GetMatchByPlayerApi(request, player_id):
     storescore = settings.STORE_SCORE
     matchs_from_BC = storescore.get_match_by_player(player_id)
     matchs_from_DB = get_match_and_tournament_by_playerId(player_id)
-    logger.info(f'valeur de match_BC: {matchs_from_BC}')
-    logger.info(f'valeur de match_DB: {matchs_from_DB}')
+    logger.debug(f'valeur de match_BC: {matchs_from_BC}')
+    logger.debug(f'valeur de match_DB: {matchs_from_DB}')
     if not matchs_from_BC and not matchs_from_DB:
         error_message = "No matchs found with player_id {0}".format(player_id)
         return Response({"error": error_message}, status=status.HTTP_400_BAD_REQUEST)
