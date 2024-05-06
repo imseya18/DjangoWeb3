@@ -3,66 +3,68 @@ from .serializers import Matchserializer, Tournament_group_data
 import json
 from django.db.models import Q
 from tabulate import tabulate
+from .loger_config import setup_logger
 
+logger = setup_logger(__name__)
 def add_tournament_to_db(tournament_data):
     if not Tournament.objects.filter(tournament_id=tournament_data['tournament_id']).exists():
-        print("Je stock le tournois dans la DB")
+        logger.info(f'saving tournament {tournament_data["tournament_id"]} in DB')
         new_tournament = Tournament(**tournament_data)
         new_tournament.save()
     else:
-        print("tournois exist deja je ne le stock pas")
+        logger.debug(f"tournament {tournament_data['tournament_id']} already exists, no save needed")
 
 
 def delete_tournament_from_db(tournament_id):
     if Tournament.objects.filter(tournament_id=tournament_id).exists():
         tournament = Tournament.objects.get(tournament_id=tournament_id)
         tournament.delete()
-        print(f"tournament {tournament_id} supprimer de la db")
+        logger.info(f"tournament {tournament_id} removed from DB")
     else:
-        print(f"tournament {tournament_id} n'est pas dans la db, pas de suppression")
+        logger.debug(f"tournament {tournament_id} isn't in DB, no removal needed")
 
 
 def add_match_to_db(match_data):
     if not Match.objects.filter(match_id=match_data['match_id']).exists():
-        print("Je stock le match dans la DB")
+        logger.info(f'saving match {match_data["match_id"]} in DB')
         new_match = Match(**match_data)
         new_match.save()
     else:
-        print("match exist deja je ne le stock pas")
+        logger.debug(f"match {match_data['match_id']} already exists, no save needed")
 
 
 def delete_match_from_db(match_id):
     if Match.objects.filter(match_id=match_id).exists():
         match = Match.objects.get(match_id=match_id)
         match.delete()
-        print(f"match {match_id} supprimer de la db")
+        logger.info(f"match {match_id} removed from DB")
     else:
-        print(f"match {match_id} n'est pas dans la db, pas de suppression")
+        logger.debug(f"match {match_id} isn't in DB, no removal needed")
 
 
 def tournament_routine_db(storescore):
     if Tournament.objects.exists():
-        print(f" il y a {Tournament.objects.count()} tournois dans la db")
+        logger.info(f" there is  {Tournament.objects.count()} tournament in DB, trying to push them")
         for tournament in Tournament.objects.all():
             tournament_dict = tournament.__dict__
             tournament_dict.pop('_state')
             tournament_dict.pop('id')
             return_code = storescore.add_tournament(tournament_dict, True)
             if return_code is True:
-                print("la TX est reussi je delete")
+                logger.info(f"TX for tournament {tournament.tournament_id} is a success")
                 delete_tournament_from_db(tournament.tournament_id)
 
 
 def match_routine_db(storescore):
     if Match.objects.exists():
-        print(f" il y a {Match.objects.count()} match dans la db")
+        logger.info(f" there is {Match.objects.count()} match in DB, trying to push them")
         for match in Match.objects.all():
             match_dict = match.__dict__
             match_dict.pop('_state')
             match_dict.pop('id')
             return_code = storescore.add_match(match_dict, True)
             if return_code is True:
-                print("la TX est reussi je delete")
+                logger.info(f"TX for tournament {match.match_id} is a success")
                 delete_match_from_db(match.match_id)
 
 
@@ -75,7 +77,7 @@ def get_match_by_playerId_db(playerId):
             validate_data = serialize.validated_data
             for match in validate_data:
                 match['from_blockchain'] = False
-            print(tabulate(validate_data, headers="keys", tablefmt="grid"))
+            logger.debug(tabulate(validate_data, headers="keys", tablefmt="grid"))
             return validate_data
     else:
         return []
@@ -107,7 +109,7 @@ def get_tournament_match_by_playerId_db(playerId):
                     validate_data['from_blockchain'] = False
                     final_match_list.append(validate_data)
                 else:
-                    print(serialize.errors)
+                    logger.debug(serialize.errors)
         return final_match_list
     else:
         return []

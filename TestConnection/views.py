@@ -1,13 +1,15 @@
 from django.conf import settings
 from django.shortcuts import render
-from .StoreInDB import (tournament_routine_db, match_routine_db, get_match_by_playerId_db, get_tx_from_db, get_match_and_tournament_by_playerId)
+from .StoreInDB import (tournament_routine_db, match_routine_db, get_tx_from_db, get_match_and_tournament_by_playerId)
 from .models import Match, Tournament
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from .serializers import Matchserializer, Tournament_group_data, SendDbMatchToSerializer
 from rest_framework import status
 from rest_framework.decorators import api_view
+from .loger_config import setup_logger
 
+logger = setup_logger(__name__)
 
 @api_view(['GET'])
 def match_get_api(request, match_id):
@@ -68,8 +70,8 @@ def GetMatchByPlayerApi(request, player_id):
     storescore = settings.STORE_SCORE
     matchs_from_BC = storescore.get_match_by_player(player_id)
     matchs_from_DB = get_match_and_tournament_by_playerId(player_id)
-    print(f'valeur de match_BC: {matchs_from_BC}')
-    print(f'valeur de match_DB: {matchs_from_DB}')
+    logger.info(f'valeur de match_BC: {matchs_from_BC}')
+    logger.info(f'valeur de match_DB: {matchs_from_DB}')
     if not matchs_from_BC and not matchs_from_DB:
         error_message = "No matchs found with player_id {0}".format(player_id)
         return Response({"error": error_message}, status=status.HTTP_400_BAD_REQUEST)
