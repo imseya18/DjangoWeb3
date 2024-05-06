@@ -6,6 +6,7 @@ attrs==23.2.0
 bitarray==2.9.2
 certifi==2024.2.2
 charset-normalizer==3.3.2
+colorama==0.4.6
 cytoolz==0.12.3
 dj-database-url==2.1.0
 Django==5.0.3
