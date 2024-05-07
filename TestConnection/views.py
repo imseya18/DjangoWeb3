@@ -8,7 +8,7 @@ from .serializers import Matchserializer, Tournament_group_data, SendDbMatchToSe
 from rest_framework import status
 from rest_framework.decorators import api_view
 from .loger_config import setup_logger
-
+from .decrypt_token import decrypt_routine
 logger = setup_logger(__name__)
 
 @api_view(['GET'])
@@ -27,6 +27,9 @@ def match_get_api(request, match_id):
 @api_view(['POST'])  #Verif token
 def match_post_api(request):
     storescore = settings.STORE_SCORE
+    if not decrypt_routine(request):
+        return Response(status=status.HTTP_401_UNAUTHORIZED)
+
     match_data = Matchserializer(data=request.data)
     if match_data.is_valid():
         validated_data = match_data.validated_data
@@ -55,6 +58,9 @@ def tournament_get_api(request, tournament_id):
 @api_view(['POST'])
 def tournament_post_api(request):                   #Verif token
     storescore = settings.STORE_SCORE
+    if not decrypt_routine(request):
+        return Response(status=status.HTTP_401_UNAUTHORIZED)
+
     raw_tournament = Matchserializer(data=request.data, many=True)
     if raw_tournament.is_valid():
         validated_data = raw_tournament.validated_data
