@@ -55,16 +55,25 @@ class StoreScore:
     def get_usd_transaction_cost(balance_before, balance_after):
         return (balance_before - balance_after) * 3250
 
-    def create_transaction(self, match_list):
+    def create_match_transaction(self, match_list):
         nonce = self.web3.eth.get_transaction_count(self.eth_address)
         gas_estimate = self.contract.functions.addMatch(*match_list).estimate_gas({'from': self.eth_address})
         return self.contract.functions.addMatch(*match_list).build_transaction({
             'chainId': self.web3.eth.chain_id,
-            'gas': gas_estimate,
+            'gas': 0,
             'gasPrice': self.web3.eth.gas_price,
             'nonce': nonce,
         })
 
+    def create_tournament_transaction(self, match_list):
+        nonce = self.web3.eth.get_transaction_count(self.eth_address)
+        gas_estimate = self.contract.functions.addTournament(*match_list).estimate_gas({'from': self.eth_address})
+        return self.contract.functions.addTournament(*match_list).build_transaction({
+            'chainId': self.web3.eth.chain_id,
+            'gas': 0,
+            'gasPrice': self.web3.eth.gas_price,
+            'nonce': nonce,
+        })
     def sign_and_send_transaction(self, transaction):
         signed_tx = self.web3.eth.account.sign_transaction(transaction, self.private_key)
         txn_hash = self.web3.eth.send_raw_transaction(signed_tx.rawTransaction)
@@ -98,7 +107,7 @@ class StoreScore:
         from .StoreInDB import add_match_to_db, delete_match_from_db, add_tx_to_db
         try:
             match_list = list(match_data.values())
-            transaction = self.create_transaction(match_list)
+            transaction = self.create_match_transaction(match_list)
             txn_hash = self.sign_and_send_transaction(transaction)
             logger.info(f' txn_hash = {txn_hash.hex()}')
             add_tx_to_db(match_data['match_id'], match_data['tournament_id'], txn_hash.hex())
@@ -112,7 +121,7 @@ class StoreScore:
         from .StoreInDB import add_tournament_to_db, delete_tournament_from_db, add_tx_to_db
         try:
             tournament_list = list(tournament_data.values())
-            transaction = self.create_transaction(tournament_list)
+            transaction = self.create_tournament_transaction(tournament_list)
             txn_hash = self.sign_and_send_transaction(transaction)
             logger.info(f' txn_hash = {txn_hash.hex()}')
             add_tx_to_db(0, tournament_data['tournament_id'], txn_hash.hex())

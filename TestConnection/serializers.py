@@ -43,3 +43,11 @@ def SendDbMatchToSerializer(match):
         "winner_id": match[5],
     })
     return match_json
+
+def serialize_match_data(match_data):
+    serialize = Matchserializer(data=match_data)
+    if serialize.is_valid():
+        validated_data = serialize.validated_data
+        validated_data['from_blockchain'] = False
+        return validated_data
+    return None

@@ -1,5 +1,5 @@
 from .models import Match, Tournament,TxHash
-from .serializers import Matchserializer, Tournament_group_data
+from .serializers import Matchserializer, serialize_match_data
 import json
 from django.db.models import Q
 from tabulate import tabulate
@@ -86,35 +86,34 @@ def get_match_by_playerId_db(playerId):
 def get_tournament_match_by_playerId_db(playerId):
     tournaments_with_player = Tournament.objects.filter(
         Q(player1_ids__contains=[playerId]) | Q(player2_ids__contains=[playerId])
-    )
-    final_match_list = []
-    if tournaments_with_player.exists():
-        for tournament in tournaments_with_player:
-            indices = [i for i, x in enumerate(tournament.player1_ids) if x == playerId]
-            indices.extend([i for i, x in enumerate(tournament.player2_ids) if x == playerId])
-            for indice in indices:
-                match_data = {
-                    'match_id': tournament.match_ids[indice],
-                    'tournament_id': tournament.tournament_id,
-                    'timestamp': tournament.timestamps[indice],
-                    'player1_id': tournament.player1_ids[indice],
-                    'player2_id': tournament.player2_ids[indice],
-                    'player1_score': tournament.player1_scores[indice],
-                    'player2_score': tournament.player2_scores[indice],
-                    'winner_id': tournament.winner_ids[indice]
-                }
-                serialize = Matchserializer(data=match_data)
-                if serialize.is_valid():
-                    validate_data = serialize.validated_data
-                    validate_data['from_blockchain'] = False
-                    final_match_list.append(validate_data)
-                else:
-                    logger.debug(serialize.errors)
-        return final_match_list
-    else:
+    ).all()
+    if not tournaments_with_player:
         return []
+    final_match_list = []
+    for tournament in tournaments_with_player:
+        indexs = [i for i, x in enumerate(tournament.player1_ids) if x == playerId]
+        indexs.extend([i for i, x in enumerate(tournament.player2_ids) if x == playerId])
+        for index in indexs:
+            match_data = construct_match_data_from_tournament(tournament, index)
+            validate_match = serialize_match_data(match_data)
+            if validate_match:
+                final_match_list.append(validate_match)
+            else:
+                logger.debug(validate_match.errors)
+    return final_match_list
 
 
+def construct_match_data_from_tournament(tournament, index):
+    return {
+        'match_id': tournament.match_ids[index],
+        'tournament_id': tournament.tournament_id,
+        'timestamp': tournament.timestamps[index],
+        'player1_id': tournament.player1_ids[index],
+        'player2_id': tournament.player2_ids[index],
+        'player1_score': tournament.player1_scores[index],
+        'player2_score': tournament.player2_scores[index],
+        'winner_id': tournament.winner_ids[index]
+    }
 def get_match_and_tournament_by_playerId(playerId):
     matchs = get_match_by_playerId_db(playerId)
     tournament_matchs = get_tournament_match_by_playerId_db(playerId)
