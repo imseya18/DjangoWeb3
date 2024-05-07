@@ -5,6 +5,7 @@ from .loger_config import setup_logger
 
 logger = setup_logger(__name__)
 
+
 class StoreScore:
     def __init__(self, infura_url, contract_address, abi, eth_address, private_key):
         self.web3 = Web3(Web3.HTTPProvider(infura_url))
@@ -17,7 +18,6 @@ class StoreScore:
 
     def get_current_block_number(self):
         return self.web3.eth.block_number
-
 
     def get_balance(self):
         balance = self.web3.eth.get_balance(self.eth_address)
@@ -71,6 +71,29 @@ class StoreScore:
         txn_receipt = self.web3.eth.wait_for_transaction_receipt(txn_hash)
         return txn_hash
 
+    def gas_error(self, e, add_to_db_func, data):
+        logger.debug(e)
+        logger.info("gas error")
+        add_to_db_func(data)
+        error_message = "Problem with blockchain, your data is safely stored in the database and will be stored in the blockchain ASAP."
+        return Response({"error": error_message}, status=status.HTTP_200_OK)
+
+    def reverted_error(self, e, delete_from_db_func, identifier):
+        logger.info(f"transaction revert: {e}")
+        delete_from_db_func(identifier)
+        error_message = f"{identifier} already exists"
+        return Response({"error": error_message}, status=status.HTTP_400_BAD_REQUEST)
+
+    def handle_transaction_error(self, e, add_to_db_func, delete_from_db_func, data, identifier):
+        if "gas" in str(e).lower():
+            return self.gas_error(e, add_to_db_func, data)
+        elif "reverted" in str(e).lower():
+            return self.reverted_error(e, delete_from_db_func, identifier)
+        else:
+            logger.info(e)
+            add_to_db_func(data)
+            return Response({"error": str(e).lower()}, status=status.HTTP_400_BAD_REQUEST)
+
     def add_match(self, match_data, from_db):
         from .StoreInDB import add_match_to_db, delete_match_from_db, add_tx_to_db
         try:
@@ -83,22 +106,7 @@ class StoreScore:
                 return True
             return Response(data=match_data, status=status.HTTP_201_CREATED)
         except Exception as e:
-            if "gas" in str(e).lower():
-                logger.debug(e)
-                logger.info("gas error")
-                add_match_to_db(match_data)
-                error_message = "Problem with blockchain, your data is safely stored in the database and will be stored in the blockchain ASAP."
-                return Response({"error": error_message}, status=status.HTTP_200_OK)
-            elif "reverted" in str(e).lower():
-                logger.info("transaction revert: ")
-                logger.info(e)
-                delete_match_from_db(match_data['match_id'])
-                error_message = "this match already exists"
-                return Response({"error": error_message}, status=status.HTTP_400_BAD_REQUEST)
-            else:
-                logger.info('cest une erreur que je connais pas')
-                logger.debug(e)
-                return Response({"error": e}, status=status.HTTP_400_BAD_REQUEST)
+            return self.handle_transaction_error(e, add_match_to_db, delete_match_from_db, match_data, match_data['match_id'])
 
     def add_tournament(self, tournament_data, from_db):
         from .StoreInDB import add_tournament_to_db, delete_tournament_from_db, add_tx_to_db
@@ -112,18 +120,5 @@ class StoreScore:
                 return True
             return Response(data=tournament_data, status=status.HTTP_201_CREATED)
         except Exception as e:
-            if "gas" in str(e).lower():
-                logger.debug(e)
-                logger.info("erreur de gas")
-                add_tournament_to_db(tournament_data)
-                error_message = "Problem with blockchain, your data is safely stored in the database and will be stored in the blockchain ASAP."
-                return Response({"error": error_message}, status=status.HTTP_200_OK)
-            elif "reverted" in str(e).lower():
-                logger.info("transaction revert:")
-                logger.info(e)
-                delete_tournament_from_db(tournament_data['tournament_id'])
-                error_message = "this tournament already exists"
-                return Response({"error": error_message}, status=status.HTTP_400_BAD_REQUEST)
-            else:
-                logger.info(e)
-                return Response({"error": e}, status=status.HTTP_400_BAD_REQUEST)
+            return self.handle_transaction_error(e, add_tournament_to_db, delete_tournament_from_db, tournament_data,
+                                                 tournament_data['tournament_id'])

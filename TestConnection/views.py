@@ -1,15 +1,14 @@
 from django.conf import settings
-from django.shortcuts import render
 from .StoreInDB import (tournament_routine_db, match_routine_db, get_tx_from_db, get_match_and_tournament_by_playerId)
-from .models import Match, Tournament
-from rest_framework.views import APIView
 from rest_framework.response import Response
 from .serializers import Matchserializer, Tournament_group_data, SendDbMatchToSerializer
 from rest_framework import status
 from rest_framework.decorators import api_view
 from .loger_config import setup_logger
 from .decrypt_token import decrypt_routine
+
 logger = setup_logger(__name__)
+
 
 @api_view(['GET'])
 def match_get_api(request, match_id):
@@ -24,12 +23,11 @@ def match_get_api(request, match_id):
         return Response({"error": error_message}, status=status.HTTP_404_NOT_FOUND)
 
 
-@api_view(['POST'])  #Verif token
+@api_view(['POST'])
 def match_post_api(request):
     storescore = settings.STORE_SCORE
     if not decrypt_routine(request):
         return Response(status=status.HTTP_401_UNAUTHORIZED)
-
     match_data = Matchserializer(data=request.data)
     if match_data.is_valid():
         validated_data = match_data.validated_data
@@ -56,11 +54,10 @@ def tournament_get_api(request, tournament_id):
 
 
 @api_view(['POST'])
-def tournament_post_api(request):                   #Verif token
+def tournament_post_api(request):
     storescore = settings.STORE_SCORE
     if not decrypt_routine(request):
         return Response(status=status.HTTP_401_UNAUTHORIZED)
-
     raw_tournament = Matchserializer(data=request.data, many=True)
     if raw_tournament.is_valid():
         validated_data = raw_tournament.validated_data

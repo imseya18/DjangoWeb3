@@ -33,3 +33,7 @@ class TxHash(models.Model):
     match_id = models.BigIntegerField(blank=True, null=True)
     tournament_id = models.BigIntegerField(blank=True, null=True)
     tx_hash = models.CharField(max_length=255)
+
+
+class TransactionId(models.Model):
+    transaction_id = models.BigIntegerField()

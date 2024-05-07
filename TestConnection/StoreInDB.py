@@ -121,6 +121,7 @@ def get_match_and_tournament_by_playerId(playerId):
     result = matchs + tournament_matchs
     return result
 
+
 def add_tx_to_db(match_id, tournament_id, tx):
     new_tnx = TxHash(match_id=match_id, tournament_id=tournament_id, tx_hash=tx)
     new_tnx.save()
