@@ -56,8 +56,9 @@ class StoreScore:
         return (balance_before - balance_after) * 3250
 
     def create_match_transaction(self, match_list):
-        nonce = self.web3.eth.get_transaction_count(self.eth_address)
+        nonce = self.web3.eth.get_transaction_count(self.eth_address, "pending")
         gas_estimate = self.contract.functions.addMatch(*match_list).estimate_gas({'from': self.eth_address})
+        logger.info(f" gas estimate = {gas_estimate}")
         return self.contract.functions.addMatch(*match_list).build_transaction({
             'chainId': self.web3.eth.chain_id,
             'gas': gas_estimate,
@@ -66,7 +67,8 @@ class StoreScore:
         })
 
     def create_tournament_transaction(self, match_list):
-        nonce = self.web3.eth.get_transaction_count(self.eth_address)
+        nonce = self.web3.eth.get_transaction_count(self.eth_address, "pending")
+        logger.info(f"nonce = {nonce}")
         gas_estimate = self.contract.functions.addTournament(*match_list).estimate_gas({'from': self.eth_address})
         return self.contract.functions.addTournament(*match_list).build_transaction({
             'chainId': self.web3.eth.chain_id,

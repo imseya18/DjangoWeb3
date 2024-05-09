@@ -44,6 +44,7 @@ def SendDbMatchToSerializer(match):
     })
     return match_json
 
+
 def serialize_match_data(match_data):
     serialize = Matchserializer(data=match_data)
     if serialize.is_valid():

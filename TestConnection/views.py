@@ -27,12 +27,9 @@ def match_post_api(request):
     storescore = settings.STORE_SCORE
     if not decrypt_routine(request):
         return Response(status=status.HTTP_401_UNAUTHORIZED)
-
     match_data = Matchserializer(data=request.data)
-
     if not match_data.is_valid():
         return Response(match_data.errors, status=status.HTTP_400_BAD_REQUEST)
-
     validated_data = match_data.validated_data
     match_routine_db(storescore)
     return storescore.add_match(validated_data, False)
@@ -55,10 +52,8 @@ def tournament_get_api(request, tournament_id):
 @api_view(['POST'])
 def tournament_post_api(request):
     storescore = settings.STORE_SCORE
-    logger.info("on rentre dans post tournamnent")
     if not decrypt_routine(request):
         return Response(status=status.HTTP_401_UNAUTHORIZED)
-    logger.info("on sort de decrypte")
     raw_tournament = Matchserializer(data=request.data, many=True)
     if raw_tournament.is_valid():
         validated_data = raw_tournament.validated_data

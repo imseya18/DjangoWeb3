@@ -54,8 +54,8 @@ def check_transaction_id(transaction_id):
 
 
 def check_timestamp_token(expire_token):
-    logger.info(f"date token: {expire_token}")
-    logger.info(f" date instant: {datetime.utcnow().isoformat()}")
+    logger.debug(f"date token: {expire_token}")
+    logger.debug(f" date instant: {datetime.utcnow().isoformat()}")
     if expire_token < datetime.utcnow().isoformat():
         logger.info("Token expired")
         return False
@@ -67,9 +67,9 @@ def decrypt_routine(request):
     transaction_id = request.headers.get('TransactionId')
     timestamp = request.headers.get('Expires')
     public_key = load_public_key("./public_key.pem")
-    logger.info(f"{auth_header}")
-    logger.info(f"{transaction_id}")
-    logger.info(f"{timestamp}")
+    logger.debug(f"{auth_header}")
+    logger.debug(f"{transaction_id}")
+    logger.debug(f"{timestamp}")
     if not auth_header or not transaction_id or not timestamp:
         return False
     if not decrypt(request.data, auth_header, public_key):
