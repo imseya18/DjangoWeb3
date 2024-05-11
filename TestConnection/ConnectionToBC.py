@@ -2,6 +2,7 @@ from web3 import Web3
 from rest_framework.response import Response
 from rest_framework import status
 from .loger_config import setup_logger
+from web3.exceptions import TimeExhausted
 
 logger = setup_logger(__name__)
 
@@ -57,6 +58,7 @@ class StoreScore:
 
     def create_match_transaction(self, match_list):
         nonce = self.web3.eth.get_transaction_count(self.eth_address, "pending")
+        logger.info(f"nonce = {nonce}")
         gas_estimate = self.contract.functions.addMatch(*match_list).estimate_gas({'from': self.eth_address})
         logger.info(f" gas estimate = {gas_estimate}")
         return self.contract.functions.addMatch(*match_list).build_transaction({
@@ -116,6 +118,8 @@ class StoreScore:
             if from_db:
                 return True
             return Response(data=match_data, status=status.HTTP_201_CREATED)
+        except TimeExhausted:
+                logger.info("salut")
         except Exception as e:
             return self.handle_transaction_error(e, add_match_to_db, delete_match_from_db, match_data, match_data['match_id'])
 
