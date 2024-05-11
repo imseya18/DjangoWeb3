@@ -119,7 +119,7 @@ class StoreScore:
                 return True
             return Response(data=match_data, status=status.HTTP_201_CREATED)
         except TimeExhausted:
-                logger.info("salut")
+                logger.info("salut") #add la tnx dans la db de check
         except Exception as e:
             return self.handle_transaction_error(e, add_match_to_db, delete_match_from_db, match_data, match_data['match_id'])
 
@@ -134,6 +134,8 @@ class StoreScore:
             if from_db:
                 return True
             return Response(data=tournament_data, status=status.HTTP_201_CREATED)
+        except TimeExhausted:
+                logger.info("salut")  #add la tnx dans la db de check
         except Exception as e:
             return self.handle_transaction_error(e, add_tournament_to_db, delete_tournament_from_db, tournament_data,
                                                  tournament_data['tournament_id'])
