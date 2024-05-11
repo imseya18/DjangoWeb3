@@ -81,7 +81,7 @@ class StoreScore:
     def sign_and_send_transaction(self, transaction):
         signed_tx = self.web3.eth.account.sign_transaction(transaction, self.private_key)
         txn_hash = self.web3.eth.send_raw_transaction(signed_tx.rawTransaction)
-        txn_receipt = self.web3.eth.wait_for_transaction_receipt(txn_hash)
+        txn_receipt = self.web3.eth.wait_for_transaction_receipt(txn_hash, 1)
         return txn_hash
 
     def gas_error(self, e, add_to_db_func, data):
