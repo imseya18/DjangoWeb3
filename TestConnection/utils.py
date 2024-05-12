@@ -20,3 +20,8 @@ def process_matches(matchs_from_BC, matchs_from_DB):
                 return_matches.append(match_data)
     return_matches.extend(matchs_from_DB or [])
     return return_matches
+
+
+class TransactionToLongError(Exception):
+    def __init__(self, txn_hash):
+        self.txn_hash = txn_hash

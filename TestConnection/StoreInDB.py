@@ -6,6 +6,8 @@ from tabulate import tabulate
 from .loger_config import setup_logger
 
 logger = setup_logger(__name__)
+
+
 def add_tournament_to_db(tournament_data):
     if not Tournament.objects.filter(tournament_id=tournament_data['tournament_id']).exists():
         logger.info(f'saving tournament {tournament_data["tournament_id"]} in DB')
@@ -55,7 +57,7 @@ def tournament_routine_db(storescore):
                 delete_tournament_from_db(tournament.tournament_id)
 
 
-def match_routine_db(storescore):
+def  match_routine_db(storescore):
     if Match.objects.exists():
         logger.info(f" there is {Match.objects.count()} match in DB, trying to push them")
         for match in Match.objects.all():
@@ -122,8 +124,10 @@ def get_match_and_tournament_by_playerId(playerId):
 
 
 def add_tx_to_db(match_id, tournament_id, tx):
-    new_tnx = TxHash(match_id=match_id, tournament_id=tournament_id, tx_hash=tx)
-    new_tnx.save()
+    if match_id != 0:
+        TxHash.objects.update_or_create(match_id=match_id, defaults={'tournament_id': tournament_id, 'tx_hash': tx})
+    else:
+        TxHash.objects.update_or_create(tournament_id=tournament_id, defaults={'match_id': match_id, 'tx_hash': tx})
 
 
 def get_tx_from_db(data):
