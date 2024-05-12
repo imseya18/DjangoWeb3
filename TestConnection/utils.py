@@ -1,6 +1,6 @@
 from .serializers import Matchserializer, Tournament_group_data, SendDbMatchToSerializer
 from .StoreInDB import get_tx_from_db
-
+from operator import itemgetter
 
 def Serialize_and_validate_data(data):
     match_json = SendDbMatchToSerializer(data)
@@ -19,6 +19,7 @@ def process_matches(matchs_from_BC, matchs_from_DB):
                 match_data['tx_hash'] = get_tx_from_db(match_data)
                 return_matches.append(match_data)
     return_matches.extend(matchs_from_DB or [])
+    return_matches.sort(key=itemgetter('timestamp'), reverse=True)
     return return_matches
 
 
