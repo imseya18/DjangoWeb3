@@ -57,27 +57,32 @@ class StoreScore:
     def get_usd_transaction_cost(balance_before, balance_after):
         return (balance_before - balance_after) * 3250
 
+    def get_gas_price_by_api(self):
+        try:
+            gas_api_response = requests.get("https://sepolia.beaconcha.in/api/v1/execution/gasnow")
+            gas_api_data = gas_api_response.json()
+            max_priority_fee_per_gas = gas_api_data["data"]["rapid"]
+            return max_priority_fee_per_gas
+        except Exception as e:
+            logger.info(e)
 
     #ADD API SYSTEM POUR GAS PRICE"
     def create_match_transaction(self, match_list):
         nonce = self.web3.eth.get_transaction_count(self.eth_address)
-        ##logger.info(f"nonce = {nonce}")
-        ##logger.info(f"gas price = {self.web3.eth.gas_price}")
-        ##gas_api = requests.get("https://sepolia.beaconcha.in/api/v1/execution/gasnow")
-        ##logger.info(f"gas_api = {gas_api.json()}")
         gas_estimate = self.contract.functions.addMatch(*match_list).estimate_gas({'from': self.eth_address})
+        logger.info(f"gas_estimate = {gas_estimate}")
         return self.contract.functions.addMatch(*match_list).build_transaction({
             'chainId': self.web3.eth.chain_id,
             'gas': gas_estimate,
-            'maxFeePerGas': (self.web3.eth.gas_price * 2),
-            'maxPriorityFeePerGas': Web3.to_wei(1, 'gwei'),
+            'maxPriorityFeePerGas': Web3.to_wei(2, 'gwei'),
             'nonce': nonce,
         })
 
     def create_tournament_transaction(self, match_list):
-        nonce = self.web3.eth.get_transaction_count(self.eth_address, "pending")
+        nonce = self.web3.eth.get_transaction_count(self.eth_address)
         logger.info(f"nonce = {nonce}")
         gas_estimate = self.contract.functions.addTournament(*match_list).estimate_gas({'from': self.eth_address})
+        logger.info(f"gas_estimate = {gas_estimate}")
         return self.contract.functions.addTournament(*match_list).build_transaction({
             'chainId': self.web3.eth.chain_id,
             'gas': gas_estimate,
@@ -87,11 +92,13 @@ class StoreScore:
         })
 
     def sign_and_send_transaction(self, transaction):
-        from .utils import TransactionToLongError
+        from .utils import TransactionToLongError, FailedTransactionError
         try:
             signed_tx = self.web3.eth.account.sign_transaction(transaction, self.private_key)
             txn_hash = self.web3.eth.send_raw_transaction(signed_tx.rawTransaction)
             txn_receipt = self.web3.eth.wait_for_transaction_receipt(txn_hash)
+            if txn_receipt.status == 0:
+                raise FailedTransactionError
             return txn_hash
         except TimeExhausted:
             raise TransactionToLongError(txn_hash)
@@ -110,7 +117,13 @@ class StoreScore:
         return Response({"error": error_message}, status=status.HTTP_400_BAD_REQUEST)
 
     def handle_transaction_error(self, e, add_to_db_func, delete_from_db_func, data, identifier):
-        if "gas" in str(e).lower():
+        from .utils import TransactionToLongError, FailedTransactionError
+        from .StoreInDB import add_tx_to_db
+        if isinstance(e, TransactionToLongError):
+            logger.error(f"The transaction is pending and will soon be displayed on the blockchain tx_hash:{e.txn_hash.hex()}")
+            add_tx_to_db(data['match_id'], data['tournament_id'], e.txn_hash.hex())
+            return Response({"error": "transaction pending will be soon display on blockchain"}, status=status.HTTP_200_OK)
+        elif "gas" in str(e).lower() or isinstance(e, FailedTransactionError):
             return self.gas_error(e, add_to_db_func, data)
         elif "reverted" in str(e).lower():
             return self.reverted_error(e, delete_from_db_func, identifier)
@@ -121,7 +134,6 @@ class StoreScore:
 
     def add_match(self, match_data, from_db):
         from .StoreInDB import add_match_to_db, delete_match_from_db, add_tx_to_db
-        from .utils import TransactionToLongError
         try:
             match_list = list(match_data.values())
             transaction = self.create_match_transaction(match_list)
@@ -131,10 +143,6 @@ class StoreScore:
             if from_db:
                 return True
             return Response(data=match_data, status=status.HTTP_201_CREATED)
-        except TransactionToLongError as e:
-            logger.error(f"The transaction is pending and will soon be displayed on the blockchain tx_hash:{e.txn_hash.hex()}")
-            add_tx_to_db(match_data['match_id'], match_data['tournament_id'], e.txn_hash.hex())
-            return Response({"error": "transaction pending will be soon display on blockchain"}, status=status.HTTP_200_OK)
         except Exception as e:
             return self.handle_transaction_error(e, add_match_to_db, delete_match_from_db, match_data, match_data['match_id'])
 
@@ -150,10 +158,6 @@ class StoreScore:
             if from_db:
                 return True
             return Response(data=tournament_data, status=status.HTTP_201_CREATED)
-        except TransactionToLongError as e:
-            logger.error("The transaction is pending and will soon be displayed on the blockchain")
-            add_tx_to_db(0, tournament_data['tournament_id'], e.txn_hash.hex())
-            return Response({"error": "transaction pending will be soon display on blockchain"}, status=status.HTTP_200_OK)
         except Exception as e:
             return self.handle_transaction_error(e, add_tournament_to_db, delete_tournament_from_db, tournament_data,
                                                  tournament_data['tournament_id'])

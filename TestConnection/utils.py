@@ -26,3 +26,7 @@ def process_matches(matchs_from_BC, matchs_from_DB):
 class TransactionToLongError(Exception):
     def __init__(self, txn_hash):
         self.txn_hash = txn_hash
+
+
+class FailedTransactionError(Exception):
+    pass
