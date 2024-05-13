@@ -3,7 +3,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from .loger_config import setup_logger
 from web3.exceptions import TimeExhausted
-
+import requests
 
 logger = setup_logger(__name__)
 
@@ -57,14 +57,20 @@ class StoreScore:
     def get_usd_transaction_cost(balance_before, balance_after):
         return (balance_before - balance_after) * 3250
 
+
+    #ADD API SYSTEM POUR GAS PRICE"
     def create_match_transaction(self, match_list):
-        nonce = self.web3.eth.get_transaction_count(self.eth_address, "pending")
-        logger.info(f"nonce = {nonce}")
+        nonce = self.web3.eth.get_transaction_count(self.eth_address)
+        ##logger.info(f"nonce = {nonce}")
+        ##logger.info(f"gas price = {self.web3.eth.gas_price}")
+        ##gas_api = requests.get("https://sepolia.beaconcha.in/api/v1/execution/gasnow")
+        ##logger.info(f"gas_api = {gas_api.json()}")
         gas_estimate = self.contract.functions.addMatch(*match_list).estimate_gas({'from': self.eth_address})
         return self.contract.functions.addMatch(*match_list).build_transaction({
             'chainId': self.web3.eth.chain_id,
             'gas': gas_estimate,
-            'gasPrice': self.web3.eth.gas_price,
+            'maxFeePerGas': (self.web3.eth.gas_price * 2),
+            'maxPriorityFeePerGas': Web3.to_wei(1, 'gwei'),
             'nonce': nonce,
         })
 
@@ -75,7 +81,8 @@ class StoreScore:
         return self.contract.functions.addTournament(*match_list).build_transaction({
             'chainId': self.web3.eth.chain_id,
             'gas': gas_estimate,
-            'gasPrice': self.web3.eth.gas_price,
+            'maxFeePerGas': (self.web3.eth.gas_price * 2),
+            'maxPriorityFeePerGas': Web3.to_wei(1, 'gwei'),
             'nonce': nonce,
         })
 
