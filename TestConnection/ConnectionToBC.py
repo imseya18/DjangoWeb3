@@ -60,31 +60,13 @@ class StoreScore:
     def get_usd_transaction_cost(balance_before, balance_after):
         return (balance_before - balance_after) * 3250
 
-    #def get_gas_price_by_api(self):
-    #    try:
-    #        gas_api_response = requests.get("https://sepolia.beaconcha.in/api/v1/execution/gasnow")
-    #        gas_api_data = gas_api_response.json()
-    #        max_priority_fee_per_gas = gas_api_data["data"]["rapid"]
-    #        return max_priority_fee_per_gas
-    #    except Exception as e:
-    #        logger.info(e)
-
     def create_match_transaction(self, match_list):
         nonce = self.web3.eth.get_transaction_count(self.eth_address)
         gas_estimate = self.contract.functions.addMatch(*match_list).estimate_gas({'from': self.eth_address})
-        logger.info(f"gas_estimate = {gas_estimate}")
-        logger.info(f"maxPriorityFeePerGas = {self.maxPriorityFeePerGas}")
-        if self.maxFeePerGas == 0:
-            latest_block = self.web3.eth.get_block('latest')
-            self.maxFeePerGas = latest_block['baseFeePerGas'] * 2
-        else:
-            self.maxFeePerGas = round(self.maxFeePerGas * 1.2)
-        logger.info(f"maxFeePerGas = {self.maxFeePerGas}")
         return self.contract.functions.addMatch(*match_list).build_transaction({
             'chainId': self.web3.eth.chain_id,
             'gas': gas_estimate,
-            'maxFeePerGas': self.maxFeePerGas,
-            'maxPriorityFeePerGas': Web3.to_wei(self.maxPriorityFeePerGas * 2, 'gwei'),
+            'maxPriorityFeePerGas': Web3.to_wei(2, 'gwei'),
             'nonce': nonce,
         })
 
@@ -96,7 +78,7 @@ class StoreScore:
         return self.contract.functions.addTournament(*match_list).build_transaction({
             'chainId': self.web3.eth.chain_id,
             'gas': gas_estimate,
-            'maxPriorityFeePerGas': Web3.to_wei(self.maxPriorityFeePerGas, 'gwei'),
+            'maxPriorityFeePerGas': Web3.to_wei(2, 'gwei'),
             'nonce': nonce,
         })
 
@@ -105,11 +87,9 @@ class StoreScore:
         try:
             signed_tx = self.web3.eth.account.sign_transaction(transaction, self.private_key)
             self.last_tx = self.web3.eth.send_raw_transaction(signed_tx.rawTransaction)
-            txn_receipt = self.web3.eth.wait_for_transaction_receipt(self.last_tx, 3)
+            txn_receipt = self.web3.eth.wait_for_transaction_receipt(self.last_tx)
             if txn_receipt.status == 0:
                 raise FailedTransactionError
-            self.maxPriorityFeePerGas = 1
-            self.maxFeePerGas = 0
             return self.last_tx
         except TimeExhausted:
             raise TransactionToLongError(self.last_tx)
@@ -131,11 +111,10 @@ class StoreScore:
         from .utils import TransactionToLongError, FailedTransactionError
         from .StoreInDB import add_tx_to_db
         if isinstance(e, TransactionToLongError):
-            self.maxPriorityFeePerGas += 1
-            return self.add_match(data, 0)
-            #logger.error(f"The transaction is pending and will soon be displayed on the blockchain tx_hash:{e.txn_hash.hex()}")
-            #add_tx_to_db(data['match_id'], data['tournament_id'], e.txn_hash.hex())
-            #return Response({"error": "transaction pending will be soon display on blockchain"}, status=status.HTTP_200_OK)
+            logger.error(f"The transaction is pending and will soon be displayed on the blockchain tx_hash:{e.txn_hash.hex()}")
+            add_tx_to_db(data['match_id'], data['tournament_id'], e.txn_hash.hex())
+            add_to_db_func(data)
+            return Response({"error": "transaction pending will be soon display on blockchain"}, status=status.HTTP_200_OK)
         elif "gas" in str(e).lower() or isinstance(e, FailedTransactionError):
             return self.gas_error(e, add_to_db_func, data)
         elif "reverted" in str(e).lower():
@@ -148,24 +127,11 @@ class StoreScore:
     def add_match(self, match_data, from_db):
         from .StoreInDB import add_match_to_db, delete_match_from_db, add_tx_to_db
         try:
-            logger.info(f"nb_passage = {self.nb_passage}")
-            self.nb_passage += 1
             match_list = list(match_data.values())
-            if self.last_tx:
-                try:
-                    tx_receipt = self.web3.eth.get_transaction_receipt(self.last_tx.hex())
-                    if tx_receipt is not None and tx_receipt.status == 1:
-                        add_tx_to_db(match_data['match_id'], match_data['tournament_id'], self.last_tx.hex())
-                        self.last_tx = None
-                        return Response(data=match_data, status=status.HTTP_201_CREATED)
-                except Exception as e:
-                    pass
             transaction = self.create_match_transaction(match_list)
             txn_hash = self.sign_and_send_transaction(transaction)
             logger.info(f' txn_hash = {txn_hash.hex()}')
             add_tx_to_db(match_data['match_id'], match_data['tournament_id'], txn_hash.hex())
-            self.last_tx = None
-            self.nb_passage = 1
             if from_db:
                 return True
             return Response(data=match_data, status=status.HTTP_201_CREATED)

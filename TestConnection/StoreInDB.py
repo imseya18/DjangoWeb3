@@ -68,6 +68,9 @@ def  match_routine_db(storescore):
             if return_code is True:
                 logger.info(f"TX for match {match.match_id} is a success")
                 delete_match_from_db(match.match_id)
+            elif return_code is False:
+                logger.info(f"je break")
+                break
 
 
 def get_match_by_playerId_db(playerId):
